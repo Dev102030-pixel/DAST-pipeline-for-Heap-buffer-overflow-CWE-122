@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Debug symbol bundles & compiled binaries
+*.dSYM/
+*.out
+dast_target_bin
