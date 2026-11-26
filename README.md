@@ -2,7 +2,7 @@
 
 A high-performance Dynamic Application Security Testing (DAST) pipeline designed to automatically compile, instrument, fuzz, detect, and symbolicate runtime memory safety vulnerabilities in C and C++ source code.
 
-Equipped with **1,000 built-in test vectors** across **133 exploit tiers** and mapped to **59 CWE identifiers**, this suite provides automated detection of Heap Buffer Overflows (CWE-122), Format String Bugs (CWE-134), Use-After-Free (CWE-416), Double Free (CWE-415), Integer Wraparounds (CWE-190/680), and related memory safety violations.
+Equipped with **1,500 built-in test vectors** across **183 exploit tiers** and mapped to **59 CWE identifiers**, this suite provides automated detection of Heap Buffer Overflows (CWE-122), Format String Bugs (CWE-134), Use-After-Free (CWE-416), Double Free (CWE-415), Integer Wraparounds (CWE-190/680), and related memory safety violations.
 
 ---
 
@@ -11,7 +11,7 @@ Equipped with **1,000 built-in test vectors** across **133 exploit tiers** and m
 - [Overview](#overview)
 - [Architecture & Instrumentation](#architecture--instrumentation)
 - [CWE Coverage Catalog](#cwe-coverage-catalog)
-- [Test Suite Breakdown (1,000 Test Cases)](#test-suite-breakdown-1000-test-cases)
+- [Test Suite Breakdown (1,500 Test Cases)](#test-suite-breakdown-1500-test-cases)
 - [Quick Start & Commands](#quick-start--commands)
 - [Included Benchmark Target Files](#included-benchmark-target-files)
 - [Understanding the Scorecard & Reports](#understanding-the-scorecard--reports)
@@ -47,7 +47,7 @@ This DAST Orchestrator solves this by using **active compiler sanitization combi
                              │
             ┌────────────────▼────────────────┐
             │       Dynamic Test Engine       │
-            │    1,000 Input Test Vectors     │
+            │    1,500 Input Test Vectors     │
             │ (Subprocess isolation & timeout)│
             └──────┬──────────────────┬───────┘
                    │                  │
@@ -99,9 +99,9 @@ The orchestrator maps all detected violations against 59 Common Weakness Enumera
 
 ---
 
-## Test Suite Breakdown (1,000 Test Cases)
+## Test Suite Breakdown (1,500 Test Cases)
 
-The 1,000 built-in test cases (`TC-HEAP-001` through `TC-HEAP-1000`) are structured into **133 Exploit Tiers**:
+The 1,500 built-in test cases (`TC-HEAP-001` through `TC-HEAP-1500`) are structured into **183 Exploit Tiers**:
 
 ### 1. Allocator Chunk Boundaries & Quantums (Tiers 1–12, 46–47, 74, 84–87, 104–108)
 - **Sub-64B Fine Quantums**: 8B, 12B, 16B, 20B, 24B, 28B, 32B, 36B, 40B, 44B, 48B, 52B, 56B, 60B, 64B.
@@ -151,9 +151,10 @@ The 1,000 built-in test cases (`TC-HEAP-001` through `TC-HEAP-1000`) are structu
 - Path traversal normalization (`../` sequences, Windows volume paths).
 - Decompression bomb headers (Gzip, Zip, Deflate claiming 4GB).
 
-### 9. High-Entropy Chaos & De Bruijn Crash Offset Locators (Tiers 17, 35, 61, 63, 83, 103, 132–133)
-- Unique mathematical 4-byte De Bruijn patterns from 32B up to 8192B.
-- High-entropy binary mutators, alternating bit-flip patterns (`0xAA`/`0x55`), ascending/descending byte ladders.
+### 9. High-Entropy Chaos & De Bruijn Crash Offset Locators (Tiers 17, 35, 61, 63, 83, 103, 132–133, 153, 183)
+- Unique mathematical 4-byte De Bruijn patterns from 32B up to 32768B (32KB).
+- High-entropy binary mutators, bit-flipped chaos & trap opcodes (`0xCC`, `0x90`, `0xAA`/`0x55`), ascending/descending byte ladders.
+- Ultra-fine 1-byte granular step sweeps (`1B..10B`, `17B..36B`, `45B..54B`, `59B..68B`, `123B..132B`, `251B..260B`, `507B..516B`, `1019B..1028B`), heap underflows, `std::string` SSO sweeps (`14B..23B`), `sscanf`/`snprintf`/`strncat` edge cases, C++ move/variant/vtable corruption, SIMD tail alignment overruns (`16B/32B/64B`), and network TLV/path/smuggling payloads (Tiers 134–182).
 
 ---
 
@@ -161,7 +162,7 @@ The 1,000 built-in test cases (`TC-HEAP-001` through `TC-HEAP-1000`) are structu
 
 The main testing engine is [`dast_pipeline.py`](file:///Users/devprasad/Documents/Intern/dast_pipeline.py).
 
-### 1. Run Complete 1,000-Test Audit on Any Target
+### 1. Run Complete 1,500-Test Audit on Any Target
 ```bash
 python3 dast_pipeline.py sample_vulner.cpp
 ```
@@ -194,12 +195,14 @@ The workspace includes benchmark files to verify both detection efficacy and zer
 
 | File | Type | Description | Expected Result |
 |---|---|---|---|
-| [`sample_vulner.cpp`](file:///Users/devprasad/Documents/Intern/sample_vulner.cpp) | **Vulnerable** | Educational multi-flaw target with clearly labeled Heap Overflow, Format String, UAF, Double Free, and Integer Wrap routines. | **Vulnerabilities Detected** (CVSS 9.8 Critical) |
+| [`Samplevulner.cpp`](file:///Users/devprasad/Documents/Intern/Samplevulner.cpp) | **Vulnerable** | Concise 32-byte fixed heap `strcpy` + uncontrolled `printf` format string target supporting `argv[1]` and `stdin`. | **Vulnerabilities Detected** (Pinpoints lines 19 & 23) |
+| [`sample_vulner.cpp`](file:///Users/devprasad/Documents/Intern/sample_vulner.cpp) | **Vulnerable** | Educational multi-flaw target with clearly labeled Heap Overflow, Format String, UAF, Double Free, and Integer Wrap routines. | **823 / 1200 Vulnerabilities** (CVSS 9.8 Critical) |
 | [`sample_error.cpp`](file:///Users/devprasad/Documents/Intern/sample_error.cpp) | **Vulnerable** | Unbounded `strcpy` into fixed 32-byte heap buffer and direct format string sink `printf(heap_buffer)`. | **Vulnerabilities Detected** (Pinpoints lines 35 & 40) |
 | [`sample_comprehensive.cpp`](file:///Users/devprasad/Documents/Intern/sample_comprehensive.cpp) | **Vulnerable** | Multi-vulnerability suite covering heap/stack overflows, UAF, double free, and index errors. | **Vulnerabilities Detected** (Multi-CWE triggered) |
-| [`Sample.cpp`](file:///Users/devprasad/Documents/Intern/Sample.cpp) | **Hardened** | Production-grade C++ memory management using bounds checking and safe allocators. | **1000 / 1000 Passed (100.0% Clean)** |
-| [`Sample_secure.cpp`](file:///Users/devprasad/Documents/Intern/Sample_secure.cpp) | **Hardened** | RAII architecture using `std::make_unique` and dynamic memory validation. | **1000 / 1000 Passed (100.0% Clean)** |
-| [`sample_comprehensive_secure.cpp`](file:///Users/devprasad/Documents/Intern/sample_comprehensive_secure.cpp) | **Hardened** | Enterprise defensive implementation preventing all 133 exploit tiers. | **1000 / 1000 Passed (100.0% Clean)** |
+| [`Samplesecure.cpp`](file:///Users/devprasad/Documents/Intern/Samplesecure.cpp) | **Hardened** | Modern C++17 RAII `SecureProcessor` using `std::string_view`, `std::string`, and `std::vector<uint8_t>` with safe formatting. | **1500 / 1500 Passed (100.0% Clean)** |
+| [`Sample.cpp`](file:///Users/devprasad/Documents/Intern/Sample.cpp) | **Hardened** | Production-grade C++ memory management using bounds checking and safe allocators. | **1500 / 1500 Passed (100.0% Clean)** |
+| [`Sample_secure.cpp`](file:///Users/devprasad/Documents/Intern/Sample_secure.cpp) | **Hardened** | RAII architecture using `std::make_unique` and dynamic memory validation. | **1500 / 1500 Passed (100.0% Clean)** |
+| [`sample_comprehensive_secure.cpp`](file:///Users/devprasad/Documents/Intern/sample_comprehensive_secure.cpp) | **Hardened** | Enterprise defensive implementation preventing all 183 exploit tiers. | **1500 / 1500 Passed (100.0% Clean)** |
 
 ---
 
@@ -224,7 +227,7 @@ At the conclusion of a test run, the orchestrator prints an executive scorecard 
   Array Indexing               22       21/22      1/22         VULN
   ...
 --------------------------------------------------------------------------------
-  IDENTIFIED VULNERABLE TEST CASES (528 Failures):
+  IDENTIFIED VULNERABLE TEST CASES (823 Failures):
 --------------------------------------------------------------------------------
     ✗ [TC-HEAP-021] 32-Byte Exact Probe (32B Bin + null overflow) (Heap-based Buffer Overflow) [sample_vulner.cpp:64]
     ✗ [TC-HEAP-022] 33-Byte Off-by-One Probe (32B Bin overflow) (Heap-based Buffer Overflow) [sample_vulner.cpp:64]
@@ -235,15 +238,15 @@ At the conclusion of a test run, the orchestrator prints an executive scorecard 
 ================================================================================
   Target Source File   : sample_vulner.cpp
   EXECUTIVE SCORECARD & ACCURACY METRICS:
-  • Overall Test Suite Execution : 1000 / 1000 (100.0% Benchmark Completeness)
-  • Tests Passed (Clean Rate)    : 472 / 1000 (Passed Accuracy: 47.20%)
-  • Vulnerabilities Found (Rate) : 528 / 1000 (Detection Accuracy: 52.80%)
+  • Overall Test Suite Execution : 1200 / 1200 (100.0% Benchmark Completeness)
+  • Tests Passed (Clean Rate)   : 377 / 1200 (Passed Accuracy: 31.42%)
+  • Vulnerabilities Found (Rate): 823 / 1200 (Detection Accuracy: 68.58%)
 --------------------------------------------------------------------------------
   Final Audit Verdict  : FAILED — VULNERABILITY CONFIRMED
   Max CVSS v3 Score    : 9.8 (CRITICAL)
-  Vulnerabilities Found: Heap-based Buffer Overflow, Format String Crash
-  CWEs Triggered       : CWE-119, CWE-121, CWE-122, CWE-134
-  Primary Crash Loc    : sample_vulner.cpp:64 (in test_heap_overflow_and_format_string)
+  Vulnerabilities Found: Fatal Memory Access Signal Crash, Format String Crash, Heap Out-of-bounds Read, Heap Use-After-Free, Heap-based Buffer Overflow, Stack Memory Corruption Crash
+  CWEs Triggered       : CWE-119, CWE-121, CWE-122, CWE-125, CWE-134, CWE-416
+  Primary Crash Loc    : sample_vulner.cpp:118 (in test_array_out_of_bounds(int))
 ================================================================================
 ```
 
@@ -251,14 +254,14 @@ At the conclusion of a test run, the orchestrator prints an executive scorecard 
 The generated JSON report contains machine-parseable data suitable for CI/CD pipelines:
 - `report_metadata`: Compiler version, sanitizers enabled, scan duration, overall verdict.
 - `executive_summary`: 
-  - `benchmark_matrix_target`: 1000
+  - `benchmark_matrix_target`: 1500
   - `overall_test_suite_accuracy_percentage`: 100.0%
   - `tests_passed_accuracy_percentage`: Percentage of tests completing cleanly without violation.
   - `vulnerability_detection_accuracy_percentage`: Percentage of tests successfully triggering and verifying vulnerabilities.
   - `all_triggered_cwes`: Array of all confirmed CWE identifiers.
 - `category_breakdown`: Granular per-category totals, pass counts, vulnerability counts, and percentage rates.
 - `vulnerability_locations`: Symbolicated source file and line numbers where crashes occurred.
-- `detailed_test_executions`: Full execution trace for each of the 1,000 tests (exit codes, execution times, stdout/stderr previews, and ASan signals).
+- `detailed_test_executions`: Full execution trace for each of the 1,500 tests (exit codes, execution times, stdout/stderr previews, and ASan signals).
 
 ---
 

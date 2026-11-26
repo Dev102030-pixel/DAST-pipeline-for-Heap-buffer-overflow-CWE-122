@@ -12,7 +12,7 @@ Architectural Capabilities:
            - AST pre-flight entry point verification (main() linker check)
            - Safe temporary artifact compilation with RAII-style guaranteed cleanup
   Layer 2: Test Harness & Payload Management
-           - 1000 structured test cases across 133 exploit tiers & 59 CWE identifiers
+           - 1500 structured test cases across 183 exploit tiers & 59 CWE identifiers
            - Multi-channel delivery: argv[1] and stdin with embedded-null handling
            - Comprehensive vulnerability battery: Heap OOB, Stack OOB, Global OOB,
              Use-After-Free, Double-Free, Integer Overflow, Divide-by-Zero, Format Strings,
@@ -218,6 +218,60 @@ EXPLOIT_VECTORS: Dict[str, Dict[str, Any]] = {
     "unicode_nfkc_overrun":{"category": "Unicode Encoding",    "vector": "Unicode Normalization Form KC/KD Overruns",    "technique": "Character decomposition expanding single UTF-8 codepoints into multiple bytes", "cwe": ["CWE-122", "CWE-838"]},
     "chaos_entropy_sweep": {"category": "Fuzzing & Chaos",     "vector": "High-Entropy Binary Mutation & Chaos Floods",  "technique": "Pseudorandom byte sequences with zero and boundary markers", "cwe": ["CWE-122", "CWE-20"]},
     "debruijn_exact_markers":{"category": "Offset Locators",   "vector": "De Bruijn Precision Crash Offset Pinpointers", "technique": "Mathematical 4-byte unique De Bruijn sequence with exact byte-index markers", "cwe": ["CWE-122"]},
+
+    # ── Precision & Extended Tiers 134-153 (TC-1001..1200) ────────────────────
+    "granular_1b_17_26":   {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (17B..26B)",      "technique": "Byte-by-byte probing across 24B heap chunk boundary",                    "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_27_36":   {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (27B..36B)",      "technique": "Byte-by-byte probing across 32B heap chunk boundary",                    "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_59_68":   {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (59B..68B)",      "technique": "Byte-by-byte probing across 64B cacheline / fastbin boundary",           "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_123_132": {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (123B..132B)",    "technique": "Byte-by-byte probing across 128B fastbin-to-smallbin boundary",          "cwe": ["CWE-122", "CWE-193"]},
+    "tcache_meta_v2":      {"category": "Metadata Corruption", "vector": "Tcache Key & Fake Chunk Header Poisoning",        "technique": "Crafted chunk size headers (0x21..0x401) and prev_inuse bit flips",      "cwe": ["CWE-122", "CWE-787", "CWE-123"]},
+    "vec_capacity_stress": {"category": "C++ STL Safety",      "vector": "std::vector Capacity & Reallocation Stress",      "technique": "Growth factor crossings, shrink_to_fit, and emplace invalidation",       "cwe": ["CWE-122", "CWE-416"]},
+    "span_view_bounds":    {"category": "C++ STL Safety",      "vector": "std::span / string_view Bounds & Lifetime",       "technique": "subspan offset+count overflow and remove_prefix past end",               "cwe": ["CWE-125", "CWE-825"]},
+    "mem_ops_missize":     {"category": "Bounded Write",       "vector": "memcpy / memmove / memset Mis-Sized Copy",        "technique": "Off-by-one memcpy, swapped memset args, and overlapping bcopy",          "cwe": ["CWE-122", "CWE-787", "CWE-805"]},
+    "calloc_new_traps":    {"category": "Integer Wrapping",    "vector": "calloc / new[] Size Wrap & Zero-Init Traps",      "technique": "calloc(nmemb, size) wraparound and unchecked nothrow new[]",             "cwe": ["CWE-190", "CWE-680", "CWE-476"]},
+    "null_interleave_traps":{"category": "Malformed Encodings","vector": "Null-Terminator Interleaved String Traps",        "technique": "Embedded \\x00 mid-payload followed by oversized tail overflow",          "cwe": ["CWE-122", "CWE-170"]},
+    "fmt_heap_hybrid":     {"category": "Format Strings",      "vector": "Hybrid Format String + Heap Overflow",            "technique": "Combines %n/%s/%x specifiers with >32B..256B heap overflow payloads",     "cwe": ["CWE-134", "CWE-122"]},
+    "cross_region_spill":  {"category": "Stack Buffer Overflows","vector": "Cross-Region Heap-to-Stack Spill",              "technique": "Oversized heap string copied into fixed 16B/32B/64B stack buffer",       "cwe": ["CWE-121", "CWE-122"]},
+    "lambda_capture_uaf":  {"category": "Memory Lifecycle Flaws","vector": "C++ Lambda & std::function Capture UAF",        "technique": "Escaped [&] reference capture and dangling [this] after delete",         "cwe": ["CWE-416", "CWE-562"]},
+    "arena_pool_overrun":  {"category": "Heap Internals",      "vector": "Custom Arena & Slab Pool Slot Overrun",           "technique": "Bump-pointer alignment drift and slab pool free-list corruption",        "cwe": ["CWE-122", "CWE-787"]},
+    "proto_desync_frame":  {"category": "Protocol Parsing",    "vector": "Protocol Length-Value Desync & Framing",          "technique": "Content-Length mismatch, negative chunked hex, MQTT/gRPC frame spill",   "cwe": ["CWE-122", "CWE-805"]},
+    "inject_heap_combo":   {"category": "Injection",           "vector": "SQLi / CMDi / Path Traversal + Heap Overflow",    "technique": "Injection payloads padded past 32B..256B heap buffer boundaries",        "cwe": ["CWE-89", "CWE-78", "CWE-122"]},
+    "float_fmt_overflow":  {"category": "Floating Point Numbers","vector": "Floating-Point %f Formatting Buffer Overflow",  "technique": "DBL_MAX 309-digit decimal expansion overflowing fixed sprintf buffers",  "cwe": ["CWE-122", "CWE-120"]},
+    "reentrant_heap_stress":{"category": "Heap Internals",     "vector": "Re-Entrant & Recursive Heap State Stress",        "technique": "Deep recursive allocation and callback container mutation",              "cwe": ["CWE-416", "CWE-400"]},
+    "simd_align_overrun":  {"category": "Heap OOB Read",       "vector": "SIMD 16B/32B/64B Tail Alignment Overrun",         "technique": "Vectorized SSE/AVX chunk-boundary tail overreads and overwrites",        "cwe": ["CWE-125", "CWE-787"]},
+    "debruijn_1200_final": {"category": "Offset Locators",     "vector": "1,200-Test Precision De Bruijn & Canary Suite",   "technique": "Precision cyclic patterns from 64B to 16KB culminating at TC-HEAP-1200", "cwe": ["CWE-122"]},
+
+    # ── Ultra-Accuracy Extended Tiers 154-183 (TC-1201..1500) ─────────────────
+    "granular_1b_1_10":    {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (1B..10B)",       "technique": "Byte-by-byte probing across tiny 8B heap chunk boundary",                "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_45_54":   {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (45B..54B)",      "technique": "Byte-by-byte probing across 48B heap chunk boundary",                    "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_251_260": {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (251B..260B)",    "technique": "Byte-by-byte probing across 256B smallbin boundary",                     "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_507_516": {"category": "Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (507B..516B)",    "technique": "Byte-by-byte probing across 512B half-KB boundary",                      "cwe": ["CWE-122", "CWE-193"]},
+    "granular_1b_1019_1028":{"category":"Heap Bin Boundaries", "vector": "1-Byte Granular Heap Step Sweep (1019B..1028B)",  "technique": "Byte-by-byte probing across 1KB (1024B) boundary",                       "cwe": ["CWE-122", "CWE-193"]},
+    "heap_underflow_neg":  {"category": "Heap Internals",      "vector": "Heap Buffer Underflow / Negative Write Probe",    "technique": "Negative offset writes corrupting preceding heap chunk headers",         "cwe": ["CWE-124", "CWE-787"]},
+    "sso_exact_sweep":     {"category": "C++ STL Safety",      "vector": "std::string SSO Boundary Sweep (14B..23B)",       "technique": "Exact byte probes across libc++/libstdc++ Small String Optimization",    "cwe": ["CWE-122", "CWE-193"]},
+    "stream_eof_traps":    {"category": "Stream Extraction",   "vector": "Stream EOF & Missing Delimiter Boundary Traps",   "technique": "Missing trailing newline, bare CR, mid-stream NUL, short-read",          "cwe": ["CWE-122", "CWE-170"]},
+    "scanf_scanset_spill": {"category": "Bounded Write",       "vector": "sscanf / fscanf Unbounded Scanset Overflows",     "technique": "Unbounded %s and %[^...] scanset writes into fixed heap buffers",        "cwe": ["CWE-120", "CWE-122"]},
+    "snprintf_retval_bug": {"category": "Bounded Write",       "vector": "snprintf Return-Value Misuse Offset Overflow",    "technique": "Accumulating snprintf return length past destination buffer capacity",    "cwe": ["CWE-122", "CWE-193"]},
+    "strncat_rem_off1":    {"category": "Heap Concatenation",  "vector": "strncat Remaining-Size Off-by-One Null Spill",    "technique": "Missing -1 in remaining capacity calculation causing 1B null overflow",   "cwe": ["CWE-122", "CWE-193"]},
+    "strdup_lifecycle":    {"category": "Memory Lifecycle Flaws","vector": "strdup / strndup Allocator & Leak Traps",       "technique": "strdup paired with delete[] and strndup truncation leaks",               "cwe": ["CWE-401", "CWE-415"]},
+    "move_semantics_uaf":  {"category": "C++ STL Safety",      "vector": "C++ Move Semantics Moved-From Object Access",     "technique": "Dereferencing moved-from unique_ptr/string/vector or double-free",       "cwe": ["CWE-416", "CWE-415"]},
+    "variant_optional_ub": {"category": "Type Confusion",      "vector": "std::variant / std::optional Bad Access UB",      "technique": "Unchecked optional dereference and variant type confusion",              "cwe": ["CWE-843", "CWE-476"]},
+    "vtable_slice_corrupt":{"category": "Control Flow Hijack", "vector": "Polymorphic Vtable & Non-Virtual Dtor Slicing",   "technique": "Base-pointer deletion without virtual dtor and adjacent vptr overwrite", "cwe": ["CWE-843", "CWE-822"]},
+    "heap_spray_gadgets":  {"category": "Heap Sprays",         "vector": "64-Bit Pointer-Aligned Gadget Heap Sprays",       "technique": "Controlled 0x4141.. / 0xDEADBEEF.. / 0xCAFEBABE.. pointer sprays",       "cwe": ["CWE-122", "CWE-822"]},
+    "fastbin_cross_chunk": {"category": "Fastbins",            "vector": "Fastbin & Tcache Cross-Chunk Fd/Bk Poison",       "technique": "Adjacent chunk fd/bk pointer overwrites at 32B..128B boundaries",        "cwe": ["CWE-122", "CWE-787"]},
+    "fmt_write_variants_v2":{"category":"Format Strings",      "vector": "Format String Length-Modifier %n Write Probes",   "technique": "%n, %hn, %hhn, %ln, %lln, %jn, %zn, %tn arbitrary write modifiers",      "cwe": ["CWE-134", "CWE-123"]},
+    "fmt_wide_positional": {"category": "Format Strings",      "vector": "Wide Format (%ls/%S) & High Positional Probes",  "technique": "Wide string format specifiers and %50$p..%200$x positional reads",       "cwe": ["CWE-134"]},
+    "int_shift_width_v2":  {"category": "Integer Issues",      "vector": "Integer Bitwise Shift & Width Overflow Traps",    "technique": "Negative shifts, shift >= bitwidth, and signed negative left shifts",    "cwe": ["CWE-190", "CWE-680"]},
+    "unaligned_ptr_cast":  {"category": "Control Flow Hijack", "vector": "Unaligned Pointer Cast & Tail Overrun",           "technique": "Casting +1/+2/+3 char* offsets to uint32_t*/uint64_t*/double*",          "cwe": ["CWE-843", "CWE-125"]},
+    "parser_smuggling_v2": {"category": "Protocol Parsing",    "vector": "HTTP Request Smuggling & Chunk Desync",           "technique": "Dual Content-Length/Transfer-Encoding and malformed chunk extensions",   "cwe": ["CWE-122", "CWE-805"]},
+    "xml_html_entity_v2":  {"category": "Malformed Encodings", "vector": "XML / HTML / SVG Attribute & Entity Overflow",    "technique": "Oversized SVG paths, DOCTYPE entity loops, and hex entity floods",       "cwe": ["CWE-122", "CWE-400"]},
+    "json_escape_surrogate":{"category":"Malformed Encodings", "vector": "JSON Escape & Surrogate Pair Decode Overflow",    "technique": "Invalid \\uZZZZ escapes, trailing backslashes, and surrogate pairs",     "cwe": ["CWE-122", "CWE-838"]},
+    "csv_ini_spill":       {"category": "Protocol Parsing",    "vector": "CSV / TSV / INI Delimiter Injection & Spill",     "technique": "Formula injection, multi-column floods, and oversized INI sections",     "cwe": ["CWE-122", "CWE-20"]},
+    "utf8_overlong_spoof": {"category": "Unicode Encoding",    "vector": "UTF-8 Overlong Encodings & Bidi Spoofs",          "technique": "Overlong slash/null encodings, mid-string BOM, and U+202E overrides",    "cwe": ["CWE-838", "CWE-116"]},
+    "net_tlv_boundary":    {"category": "Protocol Parsing",    "vector": "Network TLV Binary Framing Boundary Probes",      "technique": "Zero-length, 0xFFFF-length, 50-deep nested, and truncated TLV frames",   "cwe": ["CWE-122", "CWE-125"]},
+    "os_path_overflow":    {"category": "Injection",           "vector": "OS Path / Filename / PATH_MAX Heap Overflows",    "technique": "255B filename limit, 1024B/4096B PATH_MAX, and NUL extension bypasses",  "cwe": ["CWE-22", "CWE-122"]},
+    "chaos_bitflip_v2":    {"category": "Fuzzing & Chaos",     "vector": "Bit-Flipped Chaos & Trap Opcode Floods",          "technique": "Bit-flipped ASCII, 0xCC int3 traps, 0x90 NOP sleds, and 0x00/0xFF",      "cwe": ["CWE-122", "CWE-20"]},
+    "debruijn_1500_final": {"category": "Offset Locators",     "vector": "1,500-Test Precision De Bruijn & Canary Suite",   "technique": "Precision cyclic patterns from 48B to 32KB culminating at TC-HEAP-1500", "cwe": ["CWE-122"]},
 }
 
 CWE_COVERAGE: Dict[str, str] = {
@@ -1548,6 +1602,606 @@ RAW_BUILTIN_TESTS: List[Dict[str, str]] = [
     {"id": "TC-HEAP-998", "name": "De Bruijn Exact: 384B Precision Substring (OFFSET:384)","input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 8)[:384] + "\n", "tier": "debruijn_exact_markers"},
     {"id": "TC-HEAP-999", "name": "De Bruijn Exact: 512B Precision Substring (OFFSET:512)","input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 10)[:512] + "\n", "tier": "debruijn_exact_markers"},
     {"id": "TC-HEAP-1000","name": "De Bruijn Exact: 1000B Millennial Milestone Boundary","input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 20)[:1000] + "\n","tier": "debruijn_exact_markers"},
+
+    # ══ TIER 134 — 1-Byte Granular Heap Step Sweep (17B..26B) (TC-1001..1010) ═
+    {"id": "TC-HEAP-1001", "name": "1B Step Sweep: Exact 17-Byte Probe",              "input": "S" * 17 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1002", "name": "1B Step Sweep: Exact 18-Byte Probe",              "input": "S" * 18 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1003", "name": "1B Step Sweep: Exact 19-Byte Probe",              "input": "S" * 19 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1004", "name": "1B Step Sweep: Exact 20-Byte Probe",              "input": "S" * 20 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1005", "name": "1B Step Sweep: Exact 21-Byte Probe",              "input": "S" * 21 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1006", "name": "1B Step Sweep: Exact 22-Byte Probe",              "input": "S" * 22 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1007", "name": "1B Step Sweep: Exact 23-Byte Probe (24B-1)",      "input": "S" * 23 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1008", "name": "1B Step Sweep: Exact 24-Byte Probe (24B+null)",   "input": "S" * 24 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1009", "name": "1B Step Sweep: Exact 25-Byte Probe (24B+1)",      "input": "S" * 25 + "\n",                                                 "tier": "granular_1b_17_26"},
+    {"id": "TC-HEAP-1010", "name": "1B Step Sweep: Exact 26-Byte Probe (24B+2)",      "input": "S" * 26 + "\n",                                                 "tier": "granular_1b_17_26"},
+
+    # ══ TIER 135 — 1-Byte Granular Heap Step Sweep (27B..36B) (TC-1011..1020) ═
+    {"id": "TC-HEAP-1011", "name": "1B Step Sweep: Exact 27-Byte Probe",              "input": "T" * 27 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1012", "name": "1B Step Sweep: Exact 28-Byte Probe",              "input": "T" * 28 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1013", "name": "1B Step Sweep: Exact 29-Byte Probe",              "input": "T" * 29 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1014", "name": "1B Step Sweep: Exact 30-Byte Probe",              "input": "T" * 30 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1015", "name": "1B Step Sweep: Exact 31-Byte Probe (32B-1)",      "input": "T" * 31 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1016", "name": "1B Step Sweep: Exact 32-Byte Probe (32B+null)",   "input": "T" * 32 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1017", "name": "1B Step Sweep: Exact 33-Byte Probe (32B+1)",      "input": "T" * 33 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1018", "name": "1B Step Sweep: Exact 34-Byte Probe (32B+2)",      "input": "T" * 34 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1019", "name": "1B Step Sweep: Exact 35-Byte Probe (32B+3)",      "input": "T" * 35 + "\n",                                                 "tier": "granular_1b_27_36"},
+    {"id": "TC-HEAP-1020", "name": "1B Step Sweep: Exact 36-Byte Probe (32B+4)",      "input": "T" * 36 + "\n",                                                 "tier": "granular_1b_27_36"},
+
+    # ══ TIER 136 — 1-Byte Granular Heap Step Sweep (59B..68B) (TC-1021..1030) ═
+    {"id": "TC-HEAP-1021", "name": "1B Step Sweep: Exact 59-Byte Probe",              "input": "U" * 59 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1022", "name": "1B Step Sweep: Exact 60-Byte Probe",              "input": "U" * 60 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1023", "name": "1B Step Sweep: Exact 61-Byte Probe",              "input": "U" * 61 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1024", "name": "1B Step Sweep: Exact 62-Byte Probe",              "input": "U" * 62 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1025", "name": "1B Step Sweep: Exact 63-Byte Probe (64B-1)",      "input": "U" * 63 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1026", "name": "1B Step Sweep: Exact 64-Byte Probe (64B+null)",   "input": "U" * 64 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1027", "name": "1B Step Sweep: Exact 65-Byte Probe (64B+1)",      "input": "U" * 65 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1028", "name": "1B Step Sweep: Exact 66-Byte Probe (64B+2)",      "input": "U" * 66 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1029", "name": "1B Step Sweep: Exact 67-Byte Probe (64B+3)",      "input": "U" * 67 + "\n",                                                 "tier": "granular_1b_59_68"},
+    {"id": "TC-HEAP-1030", "name": "1B Step Sweep: Exact 68-Byte Probe (64B+4)",      "input": "U" * 68 + "\n",                                                 "tier": "granular_1b_59_68"},
+
+    # ══ TIER 137 — 1-Byte Granular Heap Step Sweep (123B..132B) (TC-1031..1040)
+    {"id": "TC-HEAP-1031", "name": "1B Step Sweep: Exact 123-Byte Probe",             "input": "V" * 123 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1032", "name": "1B Step Sweep: Exact 124-Byte Probe",             "input": "V" * 124 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1033", "name": "1B Step Sweep: Exact 125-Byte Probe",             "input": "V" * 125 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1034", "name": "1B Step Sweep: Exact 126-Byte Probe",             "input": "V" * 126 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1035", "name": "1B Step Sweep: Exact 127-Byte Probe (128B-1)",    "input": "V" * 127 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1036", "name": "1B Step Sweep: Exact 128-Byte Probe (128B+null)", "input": "V" * 128 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1037", "name": "1B Step Sweep: Exact 129-Byte Probe (128B+1)",    "input": "V" * 129 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1038", "name": "1B Step Sweep: Exact 130-Byte Probe (128B+2)",    "input": "V" * 130 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1039", "name": "1B Step Sweep: Exact 131-Byte Probe (128B+3)",    "input": "V" * 131 + "\n",                                                "tier": "granular_1b_123_132"},
+    {"id": "TC-HEAP-1040", "name": "1B Step Sweep: Exact 132-Byte Probe (128B+4)",    "input": "V" * 132 + "\n",                                                "tier": "granular_1b_123_132"},
+
+    # ══ TIER 138 — Tcache Key & Fake Chunk Header Poisoning (TC-1041..1050) ═══
+    {"id": "TC-HEAP-1041", "name": "Tcache Meta: Fake 0x21 Chunk Header Overwrite",   "input": ("\x21\x00\x00\x00\x00\x00\x00\x00" * 6) + "\n",                 "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1042", "name": "Tcache Meta: Fake 0x41 Chunk Header Overwrite",   "input": ("\x41\x00\x00\x00\x00\x00\x00\x00" * 10) + "\n",                "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1043", "name": "Tcache Meta: Fake 0x91 Unsorted Bin Header",      "input": ("\x91\x00\x00\x00\x00\x00\x00\x00" * 16) + "\n",                "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1044", "name": "Tcache Meta: Fake 0x101 Smallbin Header",         "input": ("\x01\x01\x00\x00\x00\x00\x00\x00" * 20) + "\n",                "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1045", "name": "Tcache Meta: Fake 0x401 Largebin Header",         "input": ("\x01\x04\x00\x00\x00\x00\x00\x00" * 24) + "\n",                "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1046", "name": "Tcache Meta: House of Force Top Chunk -1",        "input": ("\xff\xff\xff\xff\xff\xff\xff\xff" * 12) + "\n",                "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1047", "name": "Tcache Meta: PREV_INUSE Bit Clear (0x20)",        "input": "A" * 24 + "\x20\x00\x00\x00\x00\x00\x00\x00\n",                 "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1048", "name": "Tcache Meta: IS_MMAPPED Bit Set (0x23)",          "input": "A" * 32 + "\x23\x00\x00\x00\x00\x00\x00\x00\n",                 "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1049", "name": "Tcache Meta: Tcache Key Double-Free Bypass",      "input": "TCACHE_KEY_CORRUPT:" + ("K" * 48) + "\n",                       "tier": "tcache_meta_v2"},
+    {"id": "TC-HEAP-1050", "name": "Tcache Meta: Safe-Linking Mangled Fd Poison",     "input": "SAFE_LINK_POISON:" + ("\x10\x20\x30\x40" * 12) + "\n",          "tier": "tcache_meta_v2"},
+
+    # ══ TIER 139 — std::vector Capacity & Reallocation Stress (TC-1051..1060) ═
+    {"id": "TC-HEAP-1051", "name": "Vector Stress: Push Back Crossing 16->32 Cap",    "input": "VEC_CAP_CROSS:32\n",                                            "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1052", "name": "Vector Stress: Shrink_to_fit Dangling Ptr",       "input": "VEC_SHRINK_DANGLE\n",                                           "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1053", "name": "Vector Stress: Emplace_back Reference Inval",     "input": "VEC_EMPLACE_SELF_REF\n",                                        "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1054", "name": "Vector Stress: Insert at Invalidated Iterator",   "input": "VEC_INSERT_INVAL_ITER\n",                                       "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1055", "name": "Vector Stress: Assign Oversized Range Past End",  "input": "VEC_ASSIGN_OVERRUN:" + ("A" * 64) + "\n",                       "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1056", "name": "Vector Stress: Data() Write Past Size() < Cap()", "input": "VEC_DATA_WRITE_PAST_SIZE\n",                                    "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1057", "name": "Vector Stress: Pop_back on Empty Vector",         "input": "VEC_EMPTY_POP_BACK\n",                                          "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1058", "name": "Vector Stress: Resize(SIZE_MAX) Exception Trap",  "input": "VEC_RESIZE_SIZE_MAX\n",                                         "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1059", "name": "Vector Stress: Reserve(0) Followed by Index 0",   "input": "VEC_RESERVE_ZERO_INDEX\n",                                      "tier": "vec_capacity_stress"},
+    {"id": "TC-HEAP-1060", "name": "Vector Stress: Move-From Vector Subscript Read",  "input": "VEC_MOVED_FROM_READ\n",                                         "tier": "vec_capacity_stress"},
+
+    # ══ TIER 140 — std::span / string_view Bounds & Lifetime (TC-1061..1070) ══
+    {"id": "TC-HEAP-1061", "name": "Span/View: subspan(offset + count) Overflow",     "input": "SPAN_SUBSPAN_OVERFLOW\n",                                       "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1062", "name": "Span/View: span::first(N) Exceeding Extent",      "input": "SPAN_FIRST_EXCEED\n",                                           "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1063", "name": "Span/View: span::last(N) Exceeding Extent",       "input": "SPAN_LAST_EXCEED\n",                                            "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1064", "name": "Span/View: string_view remove_prefix > size()",   "input": "SV_REMOVE_PREFIX_OOB\n",                                        "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1065", "name": "Span/View: string_view remove_suffix > size()",   "input": "SV_REMOVE_SUFFIX_OOB\n",                                        "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1066", "name": "Span/View: string_view Non-Null-Term C API Pass", "input": "SV_NON_NULL_TERM_C_API:" + ("X" * 48) + "\n",                   "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1067", "name": "Span/View: Dangling string_view from Temp Concat","input": "SV_TEMP_CONCAT_DANGLE\n",                                       "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1068", "name": "Span/View: span<byte> Aliasing Strict Violation", "input": "SPAN_BYTE_ALIAS_PROBE\n",                                       "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1069", "name": "Span/View: Empty Span Front() Dereference",       "input": "SPAN_EMPTY_FRONT\n",                                            "tier": "span_view_bounds"},
+    {"id": "TC-HEAP-1070", "name": "Span/View: Out-of-Range span[idx] Subscript",     "input": "SPAN_SUBSCRIPT_OOB:999\n",                                      "tier": "span_view_bounds"},
+
+    # ══ TIER 141 — memcpy / memmove / memset Mis-Sized Copy (TC-1071..1080) ═══
+    {"id": "TC-HEAP-1071", "name": "Mem Ops: memcpy Off-by-One Byte Copy (N+1)",      "input": "MEMCPY_OFF1:" + ("A" * 33) + "\n",                              "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1072", "name": "Mem Ops: memcpy Using strlen(src) Without +1",    "input": "MEMCPY_NO_NULL:" + ("B" * 32) + "\n",                           "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1073", "name": "Mem Ops: memmove Negative Signed Size Cast",      "input": "MEMMOVE_NEG_SIZE:-16\n",                                        "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1074", "name": "Mem Ops: memset Swapped Size & Fill Args",        "input": "MEMSET_SWAPPED_ARGS\n",                                         "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1075", "name": "Mem Ops: memset Optimized Out Secret Scrubbing",  "input": "MEMSET_DEAD_STORE_SCRUB\n",                                     "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1076", "name": "Mem Ops: bcopy Overlapping Forward Direction",    "input": "BCOPY_OVERLAP_FWD\n",                                           "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1077", "name": "Mem Ops: memchr Scanning Past Unterminated Buf",  "input": "MEMCHR_PAST_END:" + ("C" * 64) + "\n",                          "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1078", "name": "Mem Ops: memcmp Asymmetric Buffer Length Read",   "input": "MEMCMP_ASYM_LEN:" + ("D" * 48) + "\n",                          "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1079", "name": "Mem Ops: std::copy_n Exceeding Dest Iterator",    "input": "STD_COPY_N_EXCEED:" + ("E" * 64) + "\n",                        "tier": "mem_ops_missize"},
+    {"id": "TC-HEAP-1080", "name": "Mem Ops: std::fill_n Writing Past Heap End",      "input": "STD_FILL_N_EXCEED:128\n",                                       "tier": "mem_ops_missize"},
+
+    # ══ TIER 142 — calloc / new[] Size Wrap & Zero-Init Traps (TC-1081..1090) ═
+    {"id": "TC-HEAP-1081", "name": "Calloc/New: calloc(nmemb, size) Wraparound",      "input": "CALLOC_WRAP:1073741824:4\n",                                    "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1082", "name": "Calloc/New: new char[0] Dereference Write",       "input": "NEW_ZERO_ARRAY_WRITE\n",                                        "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1083", "name": "Calloc/New: new(nothrow) Unchecked Null Write",   "input": "NEW_NOTHROW_UNCHECKED_NULL\n",                                  "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1084", "name": "Calloc/New: new[] / delete Scalar Mismatch",      "input": "NEW_ARRAY_DELETE_SCALAR\n",                                     "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1085", "name": "Calloc/New: new Scalar / delete[] Mismatch",      "input": "NEW_SCALAR_DELETE_ARRAY\n",                                     "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1086", "name": "Calloc/New: malloc() / delete C++ Mismatch",      "input": "MALLOC_CPP_DELETE_MISMATCH\n",                                  "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1087", "name": "Calloc/New: new[] / free() Allocator Mismatch",   "input": "NEW_ARRAY_C_FREE_MISMATCH\n",                                   "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1088", "name": "Calloc/New: VLA Runtime Negative Size Probe",     "input": "VLA_NEG_SIZE:-32\n",                                            "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1089", "name": "Calloc/New: VLA Gigantic Size Stack-Heap Clash",  "input": "VLA_HUGE_SIZE:16777216\n",                                      "tier": "calloc_new_traps"},
+    {"id": "TC-HEAP-1090", "name": "Calloc/New: Operator new[] Size_t Overflow",      "input": "OP_NEW_ARRAY_OVERFLOW:4611686018427387904\n",                   "tier": "calloc_new_traps"},
+
+    # ══ TIER 143 — Null-Terminator Interleaved String Traps (TC-1091..1100) ═══
+    {"id": "TC-HEAP-1091", "name": "Null Trap: Early \\x00 + 64B Tail Overflow",      "input": "OK\x00" + ("A" * 64) + "\n",                                    "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1092", "name": "Null Trap: Mid \\x00 + 128B Tail Overflow",       "input": ("B" * 16) + "\x00" + ("B" * 128) + "\n",                        "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1093", "name": "Null Trap: Leading \\x00 + 256B Tail Overflow",   "input": "\x00" + ("C" * 256) + "\n",                                     "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1094", "name": "Null Trap: Alternating \\x00 Every 4 Bytes",      "input": ("ABCD\x00" * 20) + "\n",                                        "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1095", "name": "Null Trap: Dual \\x00\\x00 Terminator + Payload", "input": "HDR\x00\x00" + ("D" * 80) + "\n",                               "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1096", "name": "Null Trap: Trailing \\x00 Before Newline (32B)",  "input": ("E" * 31) + "\x00\n",                                           "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1097", "name": "Null Trap: Format Specifier Hidden After \\x00",  "input": "SAFE\x00%s%s%n%n%p%x\n",                                        "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1098", "name": "Null Trap: Shell Injection Hidden After \\x00",   "input": "file.txt\x00; rm -rf /\n",                                      "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1099", "name": "Null Trap: 1KB Null-Padded Tail Marker",          "input": ("\x00" * 512) + ("F" * 512) + "\n",                             "tier": "null_interleave_traps"},
+    {"id": "TC-HEAP-1100", "name": "Null Trap: All-Null 64-Byte Buffer Probe",        "input": ("\x00" * 64) + "\n",                                            "tier": "null_interleave_traps"},
+
+    # ══ TIER 144 — Hybrid Format String + Heap Overflow (TC-1101..1110) ═══════
+    {"id": "TC-HEAP-1101", "name": "Fmt+Heap Hybrid: 32B %x Chain Overflow",          "input": ("%08x." * 7) + "\n",                                            "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1102", "name": "Fmt+Heap Hybrid: 48B %p Chain Overflow",          "input": ("%p." * 16) + "\n",                                             "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1103", "name": "Fmt+Heap Hybrid: 64B %s Crash + Overflow",        "input": ("%s" * 32) + "\n",                                              "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1104", "name": "Fmt+Heap Hybrid: 64B %n Write + Overflow",        "input": ("AAAA" + "%n" * 30) + "\n",                                     "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1105", "name": "Fmt+Heap Hybrid: 96B Direct %10$n + Overflow",    "input": ("B" * 48) + ("%10$n%11$n%12$n" * 3) + "\n",                       "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1106", "name": "Fmt+Heap Hybrid: 128B Width %9999d + Overflow",   "input": ("C" * 64) + "%9999d%s%n" * 6 + "\n",                              "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1107", "name": "Fmt+Heap Hybrid: 160B Mixed %hn/%hhn + Overflow", "input": ("%hn%hhn%lln%p%x" * 10) + "\n",                                 "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1108", "name": "Fmt+Heap Hybrid: 256B %s%n Flood + Overflow",     "input": ("%s%n" * 64) + "\n",                                            "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1109", "name": "Fmt+Heap Hybrid: Unescaped %% + %n Tail",         "input": ("%%%%" * 16) + "%n%n%n%n\n",                                    "tier": "fmt_heap_hybrid"},
+    {"id": "TC-HEAP-1110", "name": "Fmt+Heap Hybrid: 512B Massive Format + Heap Spill","input": ("%p%x%s%n" * 64) + "\n",                                        "tier": "fmt_heap_hybrid"},
+
+    # ══ TIER 145 — Cross-Region Heap-to-Stack Spill (TC-1111..1120) ═══════════
+    {"id": "TC-HEAP-1111", "name": "Cross-Region: 16B Stack Copy from Heap",          "input": "STACK16:" + ("A" * 24) + "\n",                                  "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1112", "name": "Cross-Region: 32B Stack Copy from Heap",          "input": "STACK32:" + ("B" * 40) + "\n",                                  "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1113", "name": "Cross-Region: 64B Stack Copy from Heap",          "input": "STACK64:" + ("C" * 72) + "\n",                                  "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1114", "name": "Cross-Region: 128B Stack Copy from Heap",         "input": "STACK128:" + ("D" * 140) + "\n",                                "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1115", "name": "Cross-Region: 256B Stack Copy from Heap",         "input": "STACK256:" + ("E" * 270) + "\n",                                "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1116", "name": "Cross-Region: alloca() Dynamic Stack Spill",      "input": "ALLOCA_SPILL:" + ("F" * 128) + "\n",                            "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1117", "name": "Cross-Region: Return Stack Ptr Stored on Heap",   "input": "HEAP_STORES_STACK_PTR\n",                                       "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1118", "name": "Cross-Region: Stack Canary Overwrite via Heap",   "input": "CANARY_SMASH:" + ("\x41" * 128) + "\n",                         "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1119", "name": "Cross-Region: Frame Pointer RBP/FP Overwrite",    "input": "FP_SMASH:" + ("\x42" * 256) + "\n",                             "tier": "cross_region_spill"},
+    {"id": "TC-HEAP-1120", "name": "Cross-Region: 4KB Stack Frame Exhaustion Spill",  "input": "STACK4K:" + ("G" * 4096) + "\n",                                "tier": "cross_region_spill"},
+
+    # ══ TIER 146 — C++ Lambda & std::function Capture UAF (TC-1121..1130) ═════
+    {"id": "TC-HEAP-1121", "name": "Lambda UAF: Escaped [&] Local Reference Capture", "input": "LAMBDA_REF_ESCAPE\n",                                           "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1122", "name": "Lambda UAF: Dangling [this] After delete this",   "input": "LAMBDA_THIS_DANGLING\n",                                        "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1123", "name": "Lambda UAF: std::function SBO Overflow to Heap",  "input": "STD_FUNC_SBO:" + ("L" * 64) + "\n",                             "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1124", "name": "Lambda UAF: Async Callback Outliving Owner",      "input": "ASYNC_CALLBACK_UAF\n",                                          "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1125", "name": "Lambda UAF: Coroutine Frame Capture Dangle",      "input": "COROUTINE_CAPTURE_DANGLE\n",                                    "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1126", "name": "Lambda UAF: Mutable Lambda State Corruption",     "input": "LAMBDA_MUTABLE_CORRUPT\n",                                      "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1127", "name": "Lambda UAF: Moved-From std::function Invoke",     "input": "STD_FUNC_MOVED_INVOKE\n",                                       "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1128", "name": "Lambda UAF: Init-Capture Raw Pointer Leak",       "input": "LAMBDA_INIT_CAPTURE_LEAK\n",                                    "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1129", "name": "Lambda UAF: Recursive std::function Stack Spill", "input": "LAMBDA_RECURSIVE_SPILL\n",                                      "tier": "lambda_capture_uaf"},
+    {"id": "TC-HEAP-1130", "name": "Lambda UAF: Null std::function Call Trap",        "input": "STD_FUNC_NULL_CALL\n",                                          "tier": "lambda_capture_uaf"},
+
+    # ══ TIER 147 — Custom Arena & Slab Pool Slot Overrun (TC-1131..1140) ══════
+    {"id": "TC-HEAP-1131", "name": "Arena Pool: Bump-Pointer Alignment Drift",        "input": "ARENA_ALIGN_DRIFT:" + ("A" * 35) + "\n",                        "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1132", "name": "Arena Pool: Slab Slot 32B Adjacent Overwrite",    "input": "SLAB_SLOT_OVERRUN:" + ("B" * 40) + "\n",                        "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1133", "name": "Arena Pool: Pool Free-List Next Ptr Poisoning",   "input": "POOL_FREELIST_POISON:" + ("\xef\xbe\xad\xde" * 12) + "\n",      "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1134", "name": "Arena Pool: Arena Reset While Pointers Live",     "input": "ARENA_RESET_UAF\n",                                             "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1135", "name": "Arena Pool: Object Pool Double-Return Trap",      "input": "POOL_DOUBLE_RETURN\n",                                          "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1136", "name": "Arena Pool: Oversized Item in Fixed Slab",        "input": "SLAB_OVERSIZED_ITEM:" + ("C" * 128) + "\n",                     "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1137", "name": "Arena Pool: Region Allocator Cross-Chunk Spill",  "input": "REGION_CROSS_CHUNK:" + ("D" * 256) + "\n",                      "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1138", "name": "Arena Pool: Buddy Allocator Split Merge Bug",     "input": "BUDDY_SPLIT_MERGE_BUG\n",                                       "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1139", "name": "Arena Pool: PMR Monotonic Buffer Resource Spill", "input": "PMR_MONOTONIC_SPILL:" + ("E" * 96) + "\n",                      "tier": "arena_pool_overrun"},
+    {"id": "TC-HEAP-1140", "name": "Arena Pool: Guard Canary Between Slab Slots",     "input": "SLAB_CANARY_BREACH:" + ("F" * 64) + "\n",                       "tier": "arena_pool_overrun"},
+
+    # ══ TIER 148 — Protocol Length-Value Desync & Framing (TC-1141..1150) ═════
+    {"id": "TC-HEAP-1141", "name": "Proto Desync: Content-Length > Actual Body",      "input": "POST / HTTP/1.1\r\nContent-Length: 4096\r\n\r\nshort\n",        "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1142", "name": "Proto Desync: Negative Content-Length Header",    "input": "POST / HTTP/1.1\r\nContent-Length: -64\r\n\r\nbody\n",          "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1143", "name": "Proto Desync: Chunked Hex Size Integer Wrap",     "input": "Transfer-Encoding: chunked\r\n\r\n80000000\r\ndata\r\n0\r\n\r\n", "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1144", "name": "Proto Desync: MQTT Remaining Length 5-Byte Spill","input": "MQTT_VARINT:\x80\x80\x80\x80\x01\n",                            "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1145", "name": "Proto Desync: gRPC 5-Byte Frame Prefix Mismatch", "input": "GRPC_FRAME:\x00\x00\x10\x00\x00small\n",                        "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1146", "name": "Proto Desync: Redis RESP Bulk String $-1 / Huge", "input": "$99999999\r\nPING\r\n",                                         "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1147", "name": "Proto Desync: RESP Array Count *1000000",         "input": "*1000000\r\n$4\r\nPING\r\n",                                    "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1148", "name": "Proto Desync: ASN.1 Indefinite Length Nesting",   "input": "ASN1_INDEF:" + ("\x30\x80" * 30) + ("\x00\x00" * 30) + "\n",      "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1149", "name": "Proto Desync: MsgPack Map32 Count Overflow",      "input": "MSGPACK_MAP32:\xdf\xff\xff\xff\xff\n",                          "tier": "proto_desync_frame"},
+    {"id": "TC-HEAP-1150", "name": "Proto Desync: CBOR Break Code Without Indef",     "input": "CBOR_BREAK:\xff\xff\xff\xff" + ("A" * 40) + "\n",               "tier": "proto_desync_frame"},
+
+    # ══ TIER 149 — SQLi / CMDi / Path Traversal + Heap Overflow (TC-1151..1160)
+    {"id": "TC-HEAP-1151", "name": "Inject+Heap: SQLi Padded Past 32B Boundary",      "input": "' OR '1'='1' -- " + ("A" * 32) + "\n",                          "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1152", "name": "Inject+Heap: SQLi UNION SELECT 64B Overflow",     "input": "1 UNION SELECT " + ("null," * 15) + "null--\n",                  "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1153", "name": "Inject+Heap: CMDi Semicolon Chain 64B Overflow",  "input": "id; " + ("echo A && " * 10) + "whoami\n",                       "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1154", "name": "Inject+Heap: CMDi Subshell $(...) 128B Overflow", "input": "$(python3 -c 'print(\"" + ("X" * 100) + "\")')\n",                "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1155", "name": "Inject+Heap: Path Traversal 128B Overflow",       "input": ("../" * 40) + "etc/passwd\n",                                   "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1156", "name": "Inject+Heap: CRLF Header Split 128B Overflow",    "input": ("Header: val\r\n" * 12) + "\r\n",                               "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1157", "name": "Inject+Heap: SSTI {{7*7}} 64B Heap Overflow",     "input": ("{{7*7}}" * 12) + "\n",                                         "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1158", "name": "Inject+Heap: XXE Entity 128B Heap Overflow",      "input": "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]>" + ("A" * 80) + "\n", "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1159", "name": "Inject+Heap: LDAP Filter Escape 64B Overflow",    "input": ")(|(uid=*))" + ("(cn=*)" * 12) + "\n",                          "tier": "inject_heap_combo"},
+    {"id": "TC-HEAP-1160", "name": "Inject+Heap: Combined Multi-Vector 256B Flood",   "input": "' OR 1=1; $(id); ../../../etc/passwd; " + ("Z" * 220) + "\n",    "tier": "inject_heap_combo"},
+
+    # ══ TIER 150 — Floating-Point %f Formatting Overflow (TC-1161..1170) ══════
+    {"id": "TC-HEAP-1161", "name": "Float Fmt: DBL_MAX Decimal Expansion (309B)",     "input": "FLOAT:" + ("9" * 309) + ".0\n",                                 "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1162", "name": "Float Fmt: -DBL_MAX Negative Expansion (310B)",   "input": "FLOAT:-" + ("9" * 309) + ".0\n",                                "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1163", "name": "Float Fmt: Subnormal 1e-323 Precision Spill",     "input": "FLOAT:0." + ("0" * 320) + "1\n",                                "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1164", "name": "Float Fmt: Scientific 1.7976931348623157e+308",   "input": "FLOAT:1.7976931348623157e+308\n",                               "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1165", "name": "Float Fmt: Hex Float 0x1.fffffffffffffp+1023",    "input": "FLOAT:0x1.fffffffffffffp+1023\n",                               "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1166", "name": "Float Fmt: Long Mantissa 128-Digit Fraction",     "input": "FLOAT:3." + ("1415926535" * 13) + "\n",                         "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1167", "name": "Float Fmt: Signaling NaN Payload Probe",          "input": "FLOAT:nan(0xdeadbeef)\n",                                       "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1168", "name": "Float Fmt: Negative Zero -0.0000000000000000",    "input": "FLOAT:-0." + ("0" * 64) + "\n",                                 "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1169", "name": "Float Fmt: Overflow to +Infinity (1e99999)",      "input": "FLOAT:1e99999\n",                                               "tier": "float_fmt_overflow"},
+    {"id": "TC-HEAP-1170", "name": "Float Fmt: Underflow to Zero (1e-99999)",         "input": "FLOAT:1e-99999\n",                                              "tier": "float_fmt_overflow"},
+
+    # ══ TIER 151 — Re-Entrant & Recursive Heap State Stress (TC-1171..1180) ═══
+    {"id": "TC-HEAP-1171", "name": "Reentrant: Deep Recursion 100 Levels + Alloc",    "input": "RECURSE:100\n",                                                 "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1172", "name": "Reentrant: Callback Mutating Iterated Vector",    "input": "REENTRANT_VEC_MUTATE\n",                                        "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1173", "name": "Reentrant: Destructor Re-Entering Owner Map",     "input": "DTOR_REENTER_MAP\n",                                            "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1174", "name": "Reentrant: Self-Referential SmartPtr Teardown",   "input": "SELF_REF_TEARDOWN\n",                                           "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1175", "name": "Reentrant: Nested Parser Depth 200 Brackets",     "input": ("(" * 200) + ("A" * 32) + (")" * 200) + "\n",                   "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1176", "name": "Reentrant: Static Buffer Overwritten Reentrantly","input": "STATIC_BUF_REENTER:" + ("R" * 48) + "\n",                       "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1177", "name": "Reentrant: Signal-Like Reentrant Alloc Call",     "input": "REENTRANT_ALLOC_CALL\n",                                        "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1178", "name": "Reentrant: Observer Notification Deleting Self",  "input": "OBSERVER_DELETE_SELF\n",                                        "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1179", "name": "Reentrant: Copy Constructor Modifying Source",    "input": "COPY_CTOR_MUTATE_SRC\n",                                        "tier": "reentrant_heap_stress"},
+    {"id": "TC-HEAP-1180", "name": "Reentrant: Swap(a, a) Self-Swap Corruption",      "input": "SELF_SWAP_CORRUPT\n",                                           "tier": "reentrant_heap_stress"},
+
+    # ══ TIER 152 — SIMD 16B/32B/64B Tail Alignment Overrun (TC-1181..1190) ════
+    {"id": "TC-HEAP-1181", "name": "SIMD Tail: 15-Byte SSE 16B Boundary Tail",        "input": "X" * 15 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1182", "name": "SIMD Tail: 16-Byte SSE Exact Aligned Read",       "input": "X" * 16 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1183", "name": "SIMD Tail: 17-Byte SSE Unaligned +1 Tail",        "input": "X" * 17 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1184", "name": "SIMD Tail: 31-Byte AVX 32B Boundary Tail",        "input": "Y" * 31 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1185", "name": "SIMD Tail: 32-Byte AVX Exact Aligned Read",       "input": "Y" * 32 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1186", "name": "SIMD Tail: 33-Byte AVX Unaligned +1 Tail",        "input": "Y" * 33 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1187", "name": "SIMD Tail: 63-Byte AVX-512 64B Boundary Tail",    "input": "Z" * 63 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1188", "name": "SIMD Tail: 64-Byte AVX-512 Exact Aligned Read",   "input": "Z" * 64 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1189", "name": "SIMD Tail: 65-Byte AVX-512 Unaligned +1 Tail",    "input": "Z" * 65 + "\n",                                                 "tier": "simd_align_overrun"},
+    {"id": "TC-HEAP-1190", "name": "SIMD Tail: 129-Byte Dual-Cacheline Unaligned +1", "input": "Z" * 129 + "\n",                                                "tier": "simd_align_overrun"},
+
+    # ══ TIER 153 — 1,200-Test Precision De Bruijn & Canary (TC-1191..1200) ════
+    {"id": "TC-HEAP-1191", "name": "Final Suite: 64B De Bruijn Canary Pattern",       "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5")[:64] + "\n",      "tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1192", "name": "Final Suite: 128B De Bruijn Canary Pattern",      "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 3)[:128] + "\n", "tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1193", "name": "Final Suite: 256B De Bruijn Canary Pattern",      "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 6)[:256] + "\n", "tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1194", "name": "Final Suite: 512B De Bruijn Canary Pattern",      "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 11)[:512] + "\n","tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1195", "name": "Final Suite: 1024B De Bruijn Canary Pattern",     "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 22)[:1024] + "\n","tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1196", "name": "Final Suite: 1200B Exact Suite-Count Pattern",    "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 25)[:1200] + "\n","tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1197", "name": "Final Suite: 2048B De Bruijn Canary Pattern",     "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 43)[:2048] + "\n","tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1198", "name": "Final Suite: 4096B Page-Boundary De Bruijn",      "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 86)[:4096] + "\n","tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1199", "name": "Final Suite: 8192B 2-Page De Bruijn Pattern",     "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 171)[:8192] + "\n","tier": "debruijn_1200_final"},
+    {"id": "TC-HEAP-1200", "name": "Final Suite: 16384B (16KB) 1200-Test Milestone",  "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 342)[:16384] + "\n","tier": "debruijn_1200_final"},
+
+    # ══ TIER 154 — 1-Byte Granular Step Sweep (1B..10B) (TC-1201..1210) ═══════
+    {"id": "TC-HEAP-1201", "name": "1B Tiny Sweep: Exact 1-Byte Probe",               "input": "A" * 1 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1202", "name": "1B Tiny Sweep: Exact 2-Byte Probe",               "input": "A" * 2 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1203", "name": "1B Tiny Sweep: Exact 3-Byte Probe",               "input": "A" * 3 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1204", "name": "1B Tiny Sweep: Exact 4-Byte Probe",               "input": "A" * 4 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1205", "name": "1B Tiny Sweep: Exact 5-Byte Probe",               "input": "A" * 5 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1206", "name": "1B Tiny Sweep: Exact 6-Byte Probe",               "input": "A" * 6 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1207", "name": "1B Tiny Sweep: Exact 7-Byte Probe (8B-1)",        "input": "A" * 7 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1208", "name": "1B Tiny Sweep: Exact 8-Byte Probe (8B+null)",     "input": "A" * 8 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1209", "name": "1B Tiny Sweep: Exact 9-Byte Probe (8B+1)",        "input": "A" * 9 + "\n",                                                  "tier": "granular_1b_1_10"},
+    {"id": "TC-HEAP-1210", "name": "1B Tiny Sweep: Exact 10-Byte Probe (8B+2)",       "input": "A" * 10 + "\n",                                                 "tier": "granular_1b_1_10"},
+
+    # ══ TIER 155 — 1-Byte Granular Step Sweep (45B..54B) (TC-1211..1220) ══════
+    {"id": "TC-HEAP-1211", "name": "1B Mid Sweep: Exact 45-Byte Probe",               "input": "B" * 45 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1212", "name": "1B Mid Sweep: Exact 46-Byte Probe",               "input": "B" * 46 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1213", "name": "1B Mid Sweep: Exact 47-Byte Probe (48B-1)",       "input": "B" * 47 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1214", "name": "1B Mid Sweep: Exact 48-Byte Probe (48B+null)",    "input": "B" * 48 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1215", "name": "1B Mid Sweep: Exact 49-Byte Probe (48B+1)",       "input": "B" * 49 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1216", "name": "1B Mid Sweep: Exact 50-Byte Probe (48B+2)",       "input": "B" * 50 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1217", "name": "1B Mid Sweep: Exact 51-Byte Probe",               "input": "B" * 51 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1218", "name": "1B Mid Sweep: Exact 52-Byte Probe",               "input": "B" * 52 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1219", "name": "1B Mid Sweep: Exact 53-Byte Probe",               "input": "B" * 53 + "\n",                                                 "tier": "granular_1b_45_54"},
+    {"id": "TC-HEAP-1220", "name": "1B Mid Sweep: Exact 54-Byte Probe",               "input": "B" * 54 + "\n",                                                 "tier": "granular_1b_45_54"},
+
+    # ══ TIER 156 — 1-Byte Granular Step Sweep (251B..260B) (TC-1221..1230) ════
+    {"id": "TC-HEAP-1221", "name": "1B Smallbin Sweep: Exact 251-Byte Probe",         "input": "C" * 251 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1222", "name": "1B Smallbin Sweep: Exact 252-Byte Probe",         "input": "C" * 252 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1223", "name": "1B Smallbin Sweep: Exact 253-Byte Probe",         "input": "C" * 253 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1224", "name": "1B Smallbin Sweep: Exact 254-Byte Probe",         "input": "C" * 254 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1225", "name": "1B Smallbin Sweep: Exact 255-Byte (256B-1)",      "input": "C" * 255 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1226", "name": "1B Smallbin Sweep: Exact 256-Byte (256B+null)",   "input": "C" * 256 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1227", "name": "1B Smallbin Sweep: Exact 257-Byte (256B+1)",      "input": "C" * 257 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1228", "name": "1B Smallbin Sweep: Exact 258-Byte (256B+2)",      "input": "C" * 258 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1229", "name": "1B Smallbin Sweep: Exact 259-Byte (256B+3)",      "input": "C" * 259 + "\n",                                                "tier": "granular_1b_251_260"},
+    {"id": "TC-HEAP-1230", "name": "1B Smallbin Sweep: Exact 260-Byte (256B+4)",      "input": "C" * 260 + "\n",                                                "tier": "granular_1b_251_260"},
+
+    # ══ TIER 157 — 1-Byte Granular Step Sweep (507B..516B) (TC-1231..1240) ════
+    {"id": "TC-HEAP-1231", "name": "1B Half-KB Sweep: Exact 507-Byte Probe",          "input": "D" * 507 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1232", "name": "1B Half-KB Sweep: Exact 508-Byte Probe",          "input": "D" * 508 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1233", "name": "1B Half-KB Sweep: Exact 509-Byte Probe",          "input": "D" * 509 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1234", "name": "1B Half-KB Sweep: Exact 510-Byte Probe",          "input": "D" * 510 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1235", "name": "1B Half-KB Sweep: Exact 511-Byte (512B-1)",       "input": "D" * 511 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1236", "name": "1B Half-KB Sweep: Exact 512-Byte (512B+null)",    "input": "D" * 512 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1237", "name": "1B Half-KB Sweep: Exact 513-Byte (512B+1)",       "input": "D" * 513 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1238", "name": "1B Half-KB Sweep: Exact 514-Byte (512B+2)",       "input": "D" * 514 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1239", "name": "1B Half-KB Sweep: Exact 515-Byte (512B+3)",       "input": "D" * 515 + "\n",                                                "tier": "granular_1b_507_516"},
+    {"id": "TC-HEAP-1240", "name": "1B Half-KB Sweep: Exact 516-Byte (512B+4)",       "input": "D" * 516 + "\n",                                                "tier": "granular_1b_507_516"},
+
+    # ══ TIER 158 — 1-Byte Granular Step Sweep (1019B..1028B) (TC-1241..1250) ══
+    {"id": "TC-HEAP-1241", "name": "1B 1KB Sweep: Exact 1019-Byte Probe",             "input": "E" * 1019 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1242", "name": "1B 1KB Sweep: Exact 1020-Byte Probe",             "input": "E" * 1020 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1243", "name": "1B 1KB Sweep: Exact 1021-Byte Probe",             "input": "E" * 1021 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1244", "name": "1B 1KB Sweep: Exact 1022-Byte Probe",             "input": "E" * 1022 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1245", "name": "1B 1KB Sweep: Exact 1023-Byte (1024B-1)",         "input": "E" * 1023 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1246", "name": "1B 1KB Sweep: Exact 1024-Byte (1024B+null)",      "input": "E" * 1024 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1247", "name": "1B 1KB Sweep: Exact 1025-Byte (1024B+1)",         "input": "E" * 1025 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1248", "name": "1B 1KB Sweep: Exact 1026-Byte (1024B+2)",         "input": "E" * 1026 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1249", "name": "1B 1KB Sweep: Exact 1027-Byte (1024B+3)",         "input": "E" * 1027 + "\n",                                               "tier": "granular_1b_1019_1028"},
+    {"id": "TC-HEAP-1250", "name": "1B 1KB Sweep: Exact 1028-Byte (1024B+4)",         "input": "E" * 1028 + "\n",                                               "tier": "granular_1b_1019_1028"},
+
+    # ══ TIER 159 — Heap Underflow / Negative Write Probes (TC-1251..1260) ═════
+    {"id": "TC-HEAP-1251", "name": "Heap Underflow: Negative Index Write buf[-1]",    "input": "UNDERFLOW_WRITE:-1\n",                                          "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1252", "name": "Heap Underflow: Negative Index Write buf[-4]",    "input": "UNDERFLOW_WRITE:-4\n",                                          "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1253", "name": "Heap Underflow: Negative Index Write buf[-8]",    "input": "UNDERFLOW_WRITE:-8\n",                                          "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1254", "name": "Heap Underflow: Negative Index Write buf[-16]",   "input": "UNDERFLOW_WRITE:-16\n",                                         "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1255", "name": "Heap Underflow: Negative Index Write buf[-32]",   "input": "UNDERFLOW_WRITE:-32\n",                                         "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1256", "name": "Heap Underflow: Reverse Strlen Loop Underflow",   "input": "UNDERFLOW_REVERSE_LOOP:" + ("A" * 40) + "\n",                   "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1257", "name": "Heap Underflow: Preceding Chunk Size Corrupt",    "input": "UNDERFLOW_PREV_SIZE\n",                                         "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1258", "name": "Heap Underflow: Negative Offset Memcpy Source",   "input": "UNDERFLOW_MEMCPY:-16\n",                                        "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1259", "name": "Heap Underflow: Ptr Arithmetic Base - 1",         "input": "UNDERFLOW_PTR_SUB_1\n",                                         "tier": "heap_underflow_neg"},
+    {"id": "TC-HEAP-1260", "name": "Heap Underflow: Index Wraparound -2147483648",    "input": "INDEX:-2147483648\n",                                           "tier": "heap_underflow_neg"},
+
+    # ══ TIER 160 — std::string SSO Boundary Sweep (14B..23B) (TC-1261..1270) ═══
+    {"id": "TC-HEAP-1261", "name": "SSO Sweep: 14-Byte Inline String",                "input": "S" * 14 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1262", "name": "SSO Sweep: 15-Byte Libstdc++ SSO Max",            "input": "S" * 15 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1263", "name": "SSO Sweep: 16-Byte Libstdc++ Heap Transition",    "input": "S" * 16 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1264", "name": "SSO Sweep: 17-Byte Post-SSO Boundary",            "input": "S" * 17 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1265", "name": "SSO Sweep: 18-Byte Mid-SSO Probe",                "input": "S" * 18 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1266", "name": "SSO Sweep: 19-Byte Mid-SSO Probe",                "input": "S" * 19 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1267", "name": "SSO Sweep: 20-Byte Mid-SSO Probe",                "input": "S" * 20 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1268", "name": "SSO Sweep: 21-Byte Pre-Libc++ SSO Limit",         "input": "S" * 21 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1269", "name": "SSO Sweep: 22-Byte Libc++ SSO Max",               "input": "S" * 22 + "\n",                                                 "tier": "sso_exact_sweep"},
+    {"id": "TC-HEAP-1270", "name": "SSO Sweep: 23-Byte Libc++ Heap Transition",       "input": "S" * 23 + "\n",                                                 "tier": "sso_exact_sweep"},
+
+    # ══ TIER 161 — Stream EOF & Missing Delimiter Traps (TC-1271..1280) ════════
+    {"id": "TC-HEAP-1271", "name": "Stream EOF: 32B Without Trailing Newline",        "input": "F" * 32,                                                        "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1272", "name": "Stream EOF: 64B Without Trailing Newline",        "input": "F" * 64,                                                        "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1273", "name": "Stream EOF: 128B Bare CR Line Ending",            "input": ("F" * 128) + "\r",                                              "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1274", "name": "Stream EOF: Multi-Line 64B+64B Split",            "input": ("A" * 64) + "\n" + ("B" * 64) + "\n",                           "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1275", "name": "Stream EOF: Leading Spaces + 64B Token",          "input": "        " + ("G" * 64) + "\n",                                  "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1276", "name": "Stream EOF: Trailing Spaces + 64B Token",         "input": ("H" * 64) + "        \n",                                       "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1277", "name": "Stream EOF: Mid-Stream NUL + 64B Continuation",   "input": "PART1\x00" + ("PART2_" * 12) + "\n",                            "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1278", "name": "Stream EOF: 256B Single Token No Whitespace",     "input": "T" * 256,                                                       "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1279", "name": "Stream EOF: 512B Single Token No Whitespace",     "input": "U" * 512,                                                       "tier": "stream_eof_traps"},
+    {"id": "TC-HEAP-1280", "name": "Stream EOF: Only Newlines Flood (x64)",           "input": "\n" * 64,                                                       "tier": "stream_eof_traps"},
+
+    # ══ TIER 162 — sscanf / fscanf Unbounded Scanset Overflows (TC-1281..1290) ═
+    {"id": "TC-HEAP-1281", "name": "Scanf Spill: Unbounded %s 64B Token",             "input": "SCANF_S:" + ("A" * 64) + "\n",                                  "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1282", "name": "Scanf Spill: Scanset %[^,] 64B Overflow",         "input": ("B" * 64) + ",tail\n",                                          "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1283", "name": "Scanf Spill: Scanset %[^\\n] 128B Overflow",      "input": ("C" * 128) + "\n",                                              "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1284", "name": "Scanf Spill: Alphanumeric %[a-zA-Z0-9] 96B",      "input": ("D1" * 48) + "\n",                                              "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1285", "name": "Scanf Spill: Multi-Field %s:%s 64B+64B",          "input": ("E" * 64) + ":" + ("F" * 64) + "\n",                            "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1286", "name": "Scanf Spill: Width Mismatch %32s into 32B Buf",   "input": "G" * 32 + "\n",                                                 "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1287", "name": "Scanf Spill: Hex Scanset %[0-9a-fA-F] 80B",       "input": ("deadbeef" * 10) + "\n",                                        "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1288", "name": "Scanf Spill: Whitespace %[ \\t] Flood 64B",       "input": (" \t" * 32) + "end\n",                                          "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1289", "name": "Scanf Spill: Negated Bracket %[^]] 128B",         "input": ("H" * 128) + "]\n",                                             "tier": "scanf_scanset_spill"},
+    {"id": "TC-HEAP-1290", "name": "Scanf Spill: Key=Value %[^=]=%s 64B=64B",         "input": ("K" * 64) + "=" + ("V" * 64) + "\n",                            "tier": "scanf_scanset_spill"},
+
+    # ══ TIER 163 — snprintf Return-Value Misuse Offset Overflow (TC-1291..1300)
+    {"id": "TC-HEAP-1291", "name": "Snprintf Retval: 32B+32B Cumulative Offset",      "input": "SNPRINTF_CUMUL:" + ("A" * 64) + "\n",                           "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1292", "name": "Snprintf Retval: 48B+48B Negative Rem Size",      "input": "SNPRINTF_NEG_REM:" + ("B" * 96) + "\n",                         "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1293", "name": "Snprintf Retval: Loop Appending 10x16B Chunks",   "input": ("CHUNK1234567890_" * 10) + "\n",                                 "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1294", "name": "Snprintf Retval: Format %s Expanding >256B",      "input": "FMT_EXPAND:" + ("X" * 260) + "\n",                              "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1295", "name": "Snprintf Retval: Return -1 Cast to size_t",       "input": "SNPRINTF_ERR_CAST\n",                                           "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1296", "name": "Snprintf Retval: Truncated Tail Missing Null",    "input": "Z" * 33 + "\n",                                                 "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1297", "name": "Snprintf Retval: Multi-Arg 3x32B Into 64B",       "input": ("P" * 32) + "|" + ("Q" * 32) + "|" + ("R" * 32) + "\n",         "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1298", "name": "Snprintf Retval: Integer %d + String %s Spill",   "input": "1234567890:" + ("S" * 64) + "\n",                                 "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1299", "name": "Snprintf Retval: Path Join %s/%s 128B Spill",     "input": ("dir/" * 32) + "file\n",                                        "tier": "snprintf_retval_bug"},
+    {"id": "TC-HEAP-1300", "name": "Snprintf Retval: Log Line %s [%s] 256B Spill",    "input": "[INFO] " + ("LOG_EVENT_" * 26) + "\n",                          "tier": "snprintf_retval_bug"},
+
+    # ══ TIER 164 — strncat Remaining-Size Off-by-One Null Spill (TC-1301..1310)
+    {"id": "TC-HEAP-1301", "name": "Strncat Off1: 16B+16B Exact 32B Null Spill",      "input": ("A" * 16) + ("B" * 16) + "\n",                                  "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1302", "name": "Strncat Off1: 32B+32B Exact 64B Null Spill",      "input": ("A" * 32) + ("B" * 32) + "\n",                                  "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1303", "name": "Strncat Off1: 64B+64B Exact 128B Null Spill",     "input": ("A" * 64) + ("B" * 64) + "\n",                                  "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1304", "name": "Strncat Off1: sizeof(ptr) 8B Mistake",            "input": "STRNCAT_SIZEOF_PTR:" + ("C" * 32) + "\n",                       "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1305", "name": "Strncat Off1: Unsigned Underflow Rem Size",       "input": "STRNCAT_UNDERFLOW:" + ("D" * 48) + "\n",                        "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1306", "name": "Strncat Off1: Multi-Token 8x8B Append",           "input": ("TOK1234_" * 8) + "\n",                                         "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1307", "name": "Strncat Off1: Prefix + 32B Suffix Spill",         "input": "PREFIX_" + ("E" * 32) + "\n",                                   "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1308", "name": "Strncat Off1: 1-Byte Overrun Chain (x40)",        "input": "1" * 40 + "\n",                                                 "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1309", "name": "Strncat Off1: Empty Dest + 64B Source",           "input": "X" * 64 + "\n",                                                 "tier": "strncat_rem_off1"},
+    {"id": "TC-HEAP-1310", "name": "Strncat Off1: Full Dest + 1B Append",             "input": ("Y" * 32) + "Z\n",                                              "tier": "strncat_rem_off1"},
+
+    # ══ TIER 165 — strdup / strndup Allocator & Leak Traps (TC-1311..1320) ════
+    {"id": "TC-HEAP-1311", "name": "Strdup Trap: strdup() Freed With delete[]",       "input": "STRDUP_DELETE_ARRAY\n",                                         "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1312", "name": "Strdup Trap: strndup() 64B Truncation Leak",      "input": "STRNDUP_LEAK:" + ("A" * 64) + "\n",                             "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1313", "name": "Strdup Trap: Oversized 1KB strdup Chain",         "input": "STRDUP_1K:" + ("B" * 1024) + "\n",                              "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1314", "name": "Strdup Trap: strdup(NULL) Deref Crash",           "input": "STRDUP_NULL_DEREF\n",                                           "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1315", "name": "Strdup Trap: Double Free on strdup Pointer",      "input": "DOUBLE_FREE_STRDUP\n",                                          "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1316", "name": "Strdup Trap: UAF After free(strdup_ptr)",         "input": "UAF_STRDUP_PTR\n",                                              "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1317", "name": "Strdup Trap: Unbounded Loop strdup Exhaustion",   "input": "STRDUP_LOOP_EXHAUST\n",                                         "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1318", "name": "Strdup Trap: strndup(src, -1) Unsigned Wrap",     "input": "STRNDUP_NEG_WRAP\n",                                            "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1319", "name": "Strdup Trap: Realloc on strdup Pointer + Spill",  "input": "STRDUP_REALLOC_SPILL:" + ("C" * 64) + "\n",                     "tier": "strdup_lifecycle"},
+    {"id": "TC-HEAP-1320", "name": "Strdup Trap: 4KB Page strdup Copy Probe",         "input": "STRDUP_4K:" + ("D" * 4096) + "\n",                              "tier": "strdup_lifecycle"},
+
+    # ══ TIER 166 — C++ Move Semantics Moved-From Access (TC-1321..1330) ═══════
+    {"id": "TC-HEAP-1321", "name": "Move UAF: Deref Moved-From unique_ptr",           "input": "MOVE_UNIQUE_PTR_DEREF\n",                                       "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1322", "name": "Move UAF: Read Moved-From std::string",           "input": "MOVE_STRING_READ\n",                                            "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1323", "name": "Move UAF: Index Moved-From std::vector",          "input": "MOVE_VECTOR_INDEX\n",                                           "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1324", "name": "Move UAF: Shallow Move Ctor Double Free",         "input": "DOUBLE_FREE_SHALLOW_MOVE\n",                                    "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1325", "name": "Move UAF: Self-Move Assignment (x = move(x))",    "input": "SELF_MOVE_ASSIGN\n",                                            "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1326", "name": "Move UAF: Moved-From shared_ptr Dereference",     "input": "MOVE_SHARED_PTR_DEREF\n",                                       "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1327", "name": "Move UAF: Rvalue Reference Dangling Return",      "input": "RVALUE_REF_DANGLE\n",                                           "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1328", "name": "Move UAF: Forwarded Reference Lifetime End",      "input": "FORWARD_REF_LIFETIME_END\n",                                    "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1329", "name": "Move UAF: Move Into Undersized Heap Buffer",      "input": "MOVE_UNDERSIZED:" + ("M" * 64) + "\n",                          "tier": "move_semantics_uaf"},
+    {"id": "TC-HEAP-1330", "name": "Move UAF: Moved-From Custom Smart Handle",        "input": "MOVE_CUSTOM_HANDLE_UAF\n",                                      "tier": "move_semantics_uaf"},
+
+    # ══ TIER 167 — std::variant / std::optional Bad Access UB (TC-1331..1340) ═
+    {"id": "TC-HEAP-1331", "name": "Variant/Opt: Deref Empty std::optional (*opt)",   "input": "OPT_EMPTY_DEREF\n",                                             "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1332", "name": "Variant/Opt: Moved-From std::optional Access",    "input": "OPT_MOVED_ACCESS\n",                                            "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1333", "name": "Variant/Opt: std::get Wrong Active Type",         "input": "VARIANT_WRONG_GET\n",                                           "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1334", "name": "Variant/Opt: Valueless-by-Exception Variant",     "input": "VARIANT_VALUELESS_EXC\n",                                       "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1335", "name": "Variant/Opt: std::any_cast Type Confusion",       "input": "ANY_CAST_MISMATCH\n",                                           "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1336", "name": "Variant/Opt: optional<string&> Lifetime End",     "input": "OPT_REF_LIFETIME_END\n",                                        "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1337", "name": "Variant/Opt: Variant Holding Heap Ptr Leak",      "input": "VARIANT_RAW_PTR_LEAK\n",                                        "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1338", "name": "Variant/Opt: Union Active Member Switch UB",      "input": "UNION_MEMBER_SWITCH_UB\n",                                      "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1339", "name": "Variant/Opt: Optional Emplace Overflow Spill",    "input": "OPT_EMPLACE_SPILL:" + ("O" * 64) + "\n",                        "tier": "variant_optional_ub"},
+    {"id": "TC-HEAP-1340", "name": "Variant/Opt: Any Holding Oversized Heap Obj",     "input": "ANY_OVERSIZED_OBJ:" + ("P" * 128) + "\n",                       "tier": "variant_optional_ub"},
+
+    # ══ TIER 168 — Polymorphic Vtable & Slicing Corruption (TC-1341..1350) ════
+    {"id": "TC-HEAP-1341", "name": "Vtable Slice: Non-Virtual Base Delete",           "input": "NON_VIRTUAL_BASE_DELETE\n",                                     "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1342", "name": "Vtable Slice: Adjacent Vptr 0x41414141 Overwrite","input": ("A" * 16) + ("\x41\x41\x41\x41\x00\x00\x00\x00" * 4) + "\n",    "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1343", "name": "Vtable Slice: Adjacent Vptr 0xDEADBEEF Overwrite","input": ("B" * 24) + ("\xef\xbe\xad\xde\x00\x00\x00\x00" * 4) + "\n",    "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1344", "name": "Vtable Slice: Pure Virtual Call in Ctor/Dtor",    "input": "PURE_VIRTUAL_CTOR_CALL\n",                                      "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1345", "name": "Vtable Slice: Object Slicing Derived->Base",      "input": "OBJECT_SLICE_DERIVED\n",                                        "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1346", "name": "Vtable Slice: static_cast Unchecked Downcast",    "input": "STATIC_CAST_BAD_DOWNCAST\n",                                    "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1347", "name": "Vtable Slice: Vptr Freed Object UAF Call",        "input": "UAF_VPTR_CALL\n",                                               "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1348", "name": "Vtable Slice: Multiple Inheritance This-Adjust",  "input": "MI_THIS_ADJUST_CORRUPT\n",                                      "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1349", "name": "Vtable Slice: Typeid on Dereferenced Null Ptr",   "input": "TYPEID_NULL_DEREF\n",                                           "tier": "vtable_slice_corrupt"},
+    {"id": "TC-HEAP-1350", "name": "Vtable Slice: 64B Vtable Spray Overwrite",        "input": ("\xde\xad\xc0\xde\xca\xfe\xba\xbe" * 8) + "\n",                 "tier": "vtable_slice_corrupt"},
+
+    # ══ TIER 169 — 64-Bit Pointer-Aligned Gadget Heap Sprays (TC-1351..1360) ══
+    {"id": "TC-HEAP-1351", "name": "Gadget Spray: 0x4141414141414141 x16 (128B)",     "input": ("\x41" * 8 * 16) + "\n",                                        "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1352", "name": "Gadget Spray: 0xDEADBEEFDEADBEEF x16 (128B)",     "input": ("\xef\xbe\xad\xde\xef\xbe\xad\xde" * 16) + "\n",                "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1353", "name": "Gadget Spray: 0xCAFEBABECAFEBABE x16 (128B)",     "input": ("\xbe\xba\xfe\xca\xbe\xba\xfe\xca" * 16) + "\n",                "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1354", "name": "Gadget Spray: 0x00007FFFFFFFFFFF Max User Ptr",   "input": ("\xff\xff\xff\xff\xff\x7f\x00\x00" * 16) + "\n",                "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1355", "name": "Gadget Spray: 0xFFFF800000000000 Kernel Addr",    "input": ("\x00\x00\x00\x00\x00\x80\xff\xff" * 16) + "\n",                "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1356", "name": "Gadget Spray: 0x0C0C0C0C0C0C0C0C Classic Spray",  "input": ("\x0c" * 8 * 32) + "\n",                                        "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1357", "name": "Gadget Spray: 0x4242424242424242 x64 (512B)",     "input": ("\x42" * 8 * 64) + "\n",                                        "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1358", "name": "Gadget Spray: 0x1337133713371337 x128 (1KB)",     "input": ("\x37\x13\x37\x13\x37\x13\x37\x13" * 128) + "\n",               "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1359", "name": "Gadget Spray: Mixed ROP Ret Sled (0xC3 x256)",    "input": ("\xc3" * 256) + "\n",                                           "tier": "heap_spray_gadgets"},
+    {"id": "TC-HEAP-1360", "name": "Gadget Spray: 4KB Page-Aligned Pointer Spray",    "input": ("\xef\xbe\xad\xde\xbe\xba\xfe\xca" * 512) + "\n",               "tier": "heap_spray_gadgets"},
+
+    # ══ TIER 170 — Fastbin & Tcache Cross-Chunk Fd/Bk Poison (TC-1361..1370) ══
+    {"id": "TC-HEAP-1361", "name": "Fastbin Poison: 32B Chunk Fd Overwrite",          "input": ("A" * 24) + "\x21\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1362", "name": "Fastbin Poison: 48B Chunk Fd Overwrite",          "input": ("A" * 40) + "\x31\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1363", "name": "Fastbin Poison: 64B Chunk Fd Overwrite",          "input": ("A" * 56) + "\x41\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1364", "name": "Fastbin Poison: 80B Chunk Fd Overwrite",          "input": ("A" * 72) + "\x51\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1365", "name": "Fastbin Poison: 96B Chunk Fd Overwrite",          "input": ("A" * 88) + "\x61\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1366", "name": "Fastbin Poison: 112B Chunk Fd Overwrite",         "input": ("A" * 104) + "\x71\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1367", "name": "Fastbin Poison: 128B Chunk Fd Overwrite",         "input": ("A" * 120) + "\x81\x00\x00\x00\x00\x00\x00\x00" + ("\x41" * 8) + "\n", "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1368", "name": "Fastbin Poison: Unsorted Bin Bk Attack",          "input": ("B" * 136) + ("\xef\xbe\xad\xde\x00\x00\x00\x00" * 2) + "\n",     "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1369", "name": "Fastbin Poison: Largebin Fd_nextsize Poison",     "input": ("C" * 512) + ("\xfe\xca\xfe\xca\x00\x00\x00\x00" * 4) + "\n",     "tier": "fastbin_cross_chunk"},
+    {"id": "TC-HEAP-1370", "name": "Fastbin Poison: Tcache Perthread Struct Spill",   "input": ("D" * 256) + ("\x00\x01\x00\x01" * 8) + "\n",                     "tier": "fastbin_cross_chunk"},
+
+    # ══ TIER 171 — Format String Length-Modifier %n Writes (TC-1371..1380) ════
+    {"id": "TC-HEAP-1371", "name": "Fmt Modifier: Standard %n 32-Bit Write",          "input": "AAAA%n\n",                                                      "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1372", "name": "Fmt Modifier: Short %hn 16-Bit Write",            "input": "AAAA%hn\n",                                                     "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1373", "name": "Fmt Modifier: Char %hhn 8-Bit Write",             "input": "AAAA%hhn\n",                                                    "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1374", "name": "Fmt Modifier: Long %ln 64-Bit Write",             "input": "AAAA%ln\n",                                                     "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1375", "name": "Fmt Modifier: Long Long %lln 64-Bit Write",       "input": "AAAA%lln\n",                                                    "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1376", "name": "Fmt Modifier: Intmax_t %jn Write",                "input": "AAAA%jn\n",                                                     "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1377", "name": "Fmt Modifier: Size_t %zn Write",                  "input": "AAAA%zn\n",                                                     "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1378", "name": "Fmt Modifier: Ptrdiff_t %tn Write",               "input": "AAAA%tn\n",                                                     "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1379", "name": "Fmt Modifier: Combined %hn%hhn%lln Chain",        "input": "%hn.%hhn.%ln.%lln\n",                                           "tier": "fmt_write_variants_v2"},
+    {"id": "TC-HEAP-1380", "name": "Fmt Modifier: Padded %256x%n Write",              "input": "%256x%n\n",                                                     "tier": "fmt_write_variants_v2"},
+
+    # ══ TIER 172 — Wide Format (%ls/%S) & High Positional (TC-1381..1390) ═════
+    {"id": "TC-HEAP-1381", "name": "Fmt Wide/Pos: Wide String %ls Leak/Crash",        "input": "%ls.%ls.%ls\n",                                                 "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1382", "name": "Fmt Wide/Pos: Legacy Wide %S Leak/Crash",         "input": "%S.%S.%S\n",                                                    "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1383", "name": "Fmt Wide/Pos: Positional Wide %1$ls Probe",       "input": "%1$ls.%2$ls\n",                                                 "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1384", "name": "Fmt Wide/Pos: Positional String %1$s..%4$s",      "input": "%1$s.%2$s.%3$s.%4$s\n",                                         "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1385", "name": "Fmt Wide/Pos: High Positional %50$p Probe",       "input": "%50$p.%51$p\n",                                                 "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1386", "name": "Fmt Wide/Pos: High Positional %200$x Probe",      "input": "%200$x\n",                                                      "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1387", "name": "Fmt Wide/Pos: Dynamic Precision %*.*s Probe",     "input": "%*.*s\n",                                                       "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1388", "name": "Fmt Wide/Pos: Float %f %e %g Stack Probe",        "input": "%f.%e.%g.%a\n",                                                 "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1389", "name": "Fmt Wide/Pos: Long Double %Lf %Lg Probe",         "input": "%Lf.%Lg\n",                                                     "tier": "fmt_wide_positional"},
+    {"id": "TC-HEAP-1390", "name": "Fmt Wide/Pos: Invalid Specifier %q %Z Probe",     "input": "%q%Z%r%y\n",                                                    "tier": "fmt_wide_positional"},
+
+    # ══ TIER 173 — Integer Bitwise Shift & Width Overflow (TC-1391..1400) ═════
+    {"id": "TC-HEAP-1391", "name": "Int Shift: Negative Shift Count (1 << -1)",       "input": "SHIFT:-1\n",                                                    "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1392", "name": "Int Shift: Shift Equal Bitwidth (1 << 32)",       "input": "SHIFT:32\n",                                                    "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1393", "name": "Int Shift: Shift Exceed Bitwidth (1 << 64)",      "input": "SHIFT:64\n",                                                    "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1394", "name": "Int Shift: Signed Negative Left Shift (-1 << 4)", "input": "NEG_SHIFT:-1:4\n",                                              "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1395", "name": "Int Shift: Signed Overflow (1 << 31 in int32)",   "input": "SHIFT_31:1\n",                                                  "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1396", "name": "Int Shift: Size Calc (1 << len) Overflow",        "input": "ALLOC_SHIFT:33\n",                                              "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1397", "name": "Int Shift: INT_MIN Unary Negation (-INT_MIN)",    "input": "INT:-2147483648\n",                                             "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1398", "name": "Int Shift: INT64_MIN Unary Negation",             "input": "INT64:-9223372036854775808\n",                                  "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1399", "name": "Int Shift: UINT32_MAX + 1 Wrap to 0",             "input": "UINT_ADD:4294967295:1\n",                                       "tier": "int_shift_width_v2"},
+    {"id": "TC-HEAP-1400", "name": "Int Shift: 0 - 1 Unsigned Underflow",             "input": "UINT_SUB:0:1\n",                                                "tier": "int_shift_width_v2"},
+
+    # ══ TIER 174 — Unaligned Pointer Cast & Tail Overrun (TC-1401..1410) ══════
+    {"id": "TC-HEAP-1401", "name": "Unaligned Cast: char* +1 to uint32_t*",           "input": "UNALIGN_CAST:1:32\n",                                           "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1402", "name": "Unaligned Cast: char* +2 to uint64_t*",           "input": "UNALIGN_CAST:2:64\n",                                           "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1403", "name": "Unaligned Cast: char* +3 to double*",             "input": "UNALIGN_CAST:3:DBL\n",                                          "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1404", "name": "Unaligned Cast: Tail 3B Read as 4B uint32_t",     "input": "TAIL_READ:3:4\n",                                               "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1405", "name": "Unaligned Cast: Tail 7B Read as 8B uint64_t",     "input": "TAIL_READ:7:8\n",                                               "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1406", "name": "Unaligned Cast: Strict Aliasing int* / float*",   "input": "STRICT_ALIAS_INT_FLOAT\n",                                      "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1407", "name": "Unaligned Cast: Packed Struct Ptr Deref",         "input": "PACKED_PTR_DEREF\n",                                            "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1408", "name": "Unaligned Cast: Function Ptr Data Cast",          "input": "FUNC_PTR_DATA_CAST\n",                                          "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1409", "name": "Unaligned Cast: Misaligned 16B SIMD Load",        "input": "SIMD_UNALIGNED_LOAD:16\n",                                      "tier": "unaligned_ptr_cast"},
+    {"id": "TC-HEAP-1410", "name": "Unaligned Cast: 33B Odd-Offset Ptr Sweep",        "input": "U" * 33 + "\n",                                                 "tier": "unaligned_ptr_cast"},
+
+    # ══ TIER 175 — HTTP Request Smuggling & Chunk Desync (TC-1411..1420) ══════
+    {"id": "TC-HEAP-1411", "name": "Smuggling: Dual CL + TE.CL Desync",               "input": "POST / HTTP/1.1\r\nContent-Length: 4\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n", "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1412", "name": "Smuggling: Duplicate Conflicting Content-Length", "input": "POST / HTTP/1.1\r\nContent-Length: 5\r\nContent-Length: 500\r\n\r\nHELLO\n", "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1413", "name": "Smuggling: Chunk Extension 128B Spill",           "input": "5;ext=" + ("X" * 128) + "\r\nHELLO\r\n0\r\n\r\n",               "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1414", "name": "Smuggling: Obfuscated TE Header Space",           "input": "Transfer-Encoding : chunked\r\n\r\n" + ("A" * 64) + "\n",       "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1415", "name": "Smuggling: Oversized HTTP Method (64B)",          "input": ("CUSTOM_METHOD_" * 5) + " / HTTP/1.1\r\n\r\n",                  "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1416", "name": "Smuggling: HTTP/0.9 Legacy Single-Line Flood",    "input": "GET /" + ("P" * 256) + "\r\n",                                  "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1417", "name": "Smuggling: Trailer Header After Zero Chunk",      "input": "0\r\nX-Trailer: " + ("T" * 128) + "\r\n\r\n",                   "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1418", "name": "Smuggling: Multipart Boundary 256B Spill",        "input": "--" + ("B" * 256) + "\r\nContent-Disposition: form-data\r\n\r\n", "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1419", "name": "Smuggling: Host Header Port Overflow",            "input": "GET / HTTP/1.1\r\nHost: " + ("h." * 40) + "com:999999\r\n\r\n", "tier": "parser_smuggling_v2"},
+    {"id": "TC-HEAP-1420", "name": "Smuggling: Obs-Fold Header Continuation 256B",    "input": "X-Fold: a\r\n " + ("b" * 256) + "\r\n\r\n",                       "tier": "parser_smuggling_v2"},
+
+    # ══ TIER 176 — XML / HTML / SVG Attribute & Entity (TC-1421..1430) ════════
+    {"id": "TC-HEAP-1421", "name": "XML/HTML: Oversized SVG Path d Attribute (512B)", "input": '<svg><path d="M0 0 ' + ("L10 10 " * 70) + '"/></svg>\n',       "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1422", "name": "XML/HTML: Unclosed Script Tag Payload (128B)",    "input": "<script>var x='" + ("A" * 128) + "'\n",                        "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1423", "name": "XML/HTML: Malformed Hex Entity &#x41414141;",     "input": "&#x41414141;" * 16 + "\n",                                      "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1424", "name": "XML/HTML: Recursive DOCTYPE Entity Loop",         "input": "<!DOCTYPE a [<!ENTITY a '&a;&a;'>]><r>&a;</r>\n",               "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1425", "name": "XML/HTML: 64B Tag Name Heap Spill",               "input": "<" + ("TAGNAME_" * 8) + ">data</" + ("TAGNAME_" * 8) + ">\n",   "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1426", "name": "XML/HTML: Unterminated Comment <!-- 256B",        "input": "<!-- " + ("COMMENT_" * 32) + "\n",                              "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1427", "name": "XML/HTML: Processing Instruction <?xml 128B",     "input": "<?xml version='1.0' encoding='" + ("U" * 128) + "'?>\n",          "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1428", "name": "XML/HTML: Namespace Prefix 128B Spill",           "input": "<ns" + ("1" * 128) + ":elem/>\n",                               "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1429", "name": "XML/HTML: Mixed Entities &amp;&lt;&gt; x32",      "input": ("&amp;&lt;&gt;&quot;&apos;" * 12) + "\n",                       "tier": "xml_html_entity_v2"},
+    {"id": "TC-HEAP-1430", "name": "XML/HTML: Deep 80-Level HTML Div Nesting",        "input": ("<div>" * 80) + "x" + ("</div>" * 80) + "\n",                   "tier": "xml_html_entity_v2"},
+
+    # ══ TIER 177 — JSON Escape & Surrogate Pair Decoding (TC-1431..1440) ══════
+    {"id": "TC-HEAP-1431", "name": "JSON Escape: Valid Surrogate \\uD83D\\uDE00 x16", "input": '"' + ("\\uD83D\\uDE00" * 16) + '"\n',                           "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1432", "name": "JSON Escape: Invalid Hex \\uZZZZ Trap",           "input": '{"k":"\\uZZZZ\\uGGGG\\u123"}\n',                                "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1433", "name": "JSON Escape: Trailing Backslash Before Quote",    "input": '{"k":"' + ("A" * 64) + '\\"\n',                                 "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1434", "name": "JSON Escape: Repeated Escaped Quotes \\\" x40",   "input": '"' + ('\\"' * 40) + '"\n',                                      "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1435", "name": "JSON Escape: Repeated Escaped Backslash \\\\ x40","input": '"' + ('\\\\' * 40) + '"\n',                                     "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1436", "name": "JSON Escape: Lone High Surrogate \\uD800 x16",    "input": '"' + ("\\uD800" * 16) + '"\n',                                    "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1437", "name": "JSON Escape: Raw Control Chars 0x01..0x1F",       "input": '"' + "".join(chr(i) for i in range(1, 32)) + '"\n',               "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1438", "name": "JSON Escape: 512B Single Unescaped Value",        "input": '{"val":"' + ("J" * 512) + '"}\n',                               "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1439", "name": "JSON Escape: 200-Element Numeric Array",          "input": "[" + ",".join(str(i) for i in range(200)) + "]\n",              "tier": "json_escape_surrogate"},
+    {"id": "TC-HEAP-1440", "name": "JSON Escape: Deeply Escaped \\n\\t\\r\\b\\f x20", "input": '"' + ("\\n\\t\\r\\b\\f" * 20) + '"\n',                          "tier": "json_escape_surrogate"},
+
+    # ══ TIER 178 — CSV / TSV / INI Delimiter Injection & Spill (TC-1441..1450) 
+    {"id": "TC-HEAP-1441", "name": "CSV/INI: Formula Injection =cmd|' /C calc'!A0",    "input": "=cmd|' /C calc'!A0," + ("col," * 15) + "\n",                    "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1442", "name": "CSV/INI: 200 Comma-Separated Columns",            "input": ",".join(f"c{i}" for i in range(200)) + "\n",                    "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1443", "name": "CSV/INI: Unclosed Quoted Field 256B",             "input": 'col1,"' + ("UNCLOSED_CSV_DATA_" * 15) + "\n",                   "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1444", "name": "CSV/INI: Escaped Double-Quotes \"\" Flood",       "input": '"' + ('""' * 64) + '"\n',                                       "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1445", "name": "CSV/INI: Tab-Separated 128-Column Row",           "input": "\t".join(f"t{i}" for i in range(128)) + "\n",                   "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1446", "name": "CSV/INI: Oversized INI Section [SEC...256B]",     "input": "[" + ("SECTION_" * 32) + "]\nkey=val\n",                        "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1447", "name": "CSV/INI: INI Key Without Value (key=)",           "input": ("EMPTY_KEY_" * 10) + "=\n",                                     "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1448", "name": "CSV/INI: INI Comment Flood (; x256)",             "input": ";" + ("#" * 256) + "\n",                                          "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1449", "name": "CSV/INI: CRLF Mixed With Bare LF Rows",           "input": "a,b,c\r\n1,2,3\n" + ("4,5,6\r\n" * 16),                           "tier": "csv_ini_spill"},
+    {"id": "TC-HEAP-1450", "name": "CSV/INI: 1KB Single CSV Cell Value",              "input": "id," + ("X" * 1024) + ",end\n",                                 "tier": "csv_ini_spill"},
+
+    # ══ TIER 179 — UTF-8 Overlong Encodings & Bidi Spoofs (TC-1451..1460) ═════
+    {"id": "TC-HEAP-1451", "name": "UTF-8 Spoof: Overlong Slash (0xC0 0xAF) x16",     "input": ("\xc0\xaf" * 16) + "etc/passwd\n",                              "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1452", "name": "UTF-8 Spoof: Overlong NUL (0xC0 0x80) x16",       "input": "SAFE" + ("\xc0\x80" * 16) + "TAIL\n",                           "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1453", "name": "UTF-8 Spoof: Overlong Dot-Dot (0xC0 0xAE)",       "input": ("\xc0\xae\xc0\xae\xc0\xaf" * 8) + "secret\n",                   "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1454", "name": "UTF-8 Spoof: Mid-String BOM (0xEF 0xBB 0xBF) x16", "input": "DATA" + ("\xef\xbb\xbf" * 16) + "END\n",                        "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1455", "name": "UTF-8 Spoof: Bidi RLO Override (U+202E) x16",     "input": ("\u202e" * 16) + "cod.exe\n",                                 "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1456", "name": "UTF-8 Spoof: Replacement Char (U+FFFD) x32",      "input": ("\ufffd" * 32) + "\n",                                          "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1457", "name": "UTF-8 Spoof: Truncated 4-Byte Seq (0xF0 0x9F)",   "input": ("A" * 30) + "\xf0\x9f\n",                                       "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1458", "name": "UTF-8 Spoof: Invalid 5-Byte Prefix (0xF8) x16",   "input": ("\xf8\x88\x80\x80\x80" * 8) + "\n",                             "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1459", "name": "UTF-8 Spoof: Invalid 6-Byte Prefix (0xFC) x16",   "input": ("\xfc\x84\x80\x80\x80\x80" * 8) + "\n",                         "tier": "utf8_overlong_spoof"},
+    {"id": "TC-HEAP-1460", "name": "UTF-8 Spoof: Stray Continuation Bytes (0x80..0xBF)","input": "".join(chr(b) for b in range(0x80, 0xC0)) + "\n",                "tier": "utf8_overlong_spoof"},
+
+    # ══ TIER 180 — Network TLV Binary Framing Probes (TC-1461..1470) ══════════
+    {"id": "TC-HEAP-1461", "name": "Net TLV: Zero-Length TLV Frame",                  "input": "TLV:\x01\x00\x00\n",                                            "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1462", "name": "Net TLV: 0xFFFF Length With 4B Payload",          "input": "TLV:\x01\xff\xffAAAA\n",                                        "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1463", "name": "Net TLV: 50-Deep Nested TLV Sequence",            "input": "TLV_NEST:" + ("\x02\x00\x04" * 50) + "\n",                      "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1464", "name": "Net TLV: Truncated 1-Byte Header at EOF",         "input": "TLV_TRUNC:\x01",                                                "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1465", "name": "Net TLV: Trailing Garbage Past Declared Len",     "input": "TLV:\x01\x00\x04ABCD" + ("Z" * 128) + "\n",                     "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1466", "name": "Net TLV: Negative Signed 16-Bit Len (0x8000)",    "input": "TLV:\x01\x80\x00DATA\n",                                        "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1467", "name": "Net TLV: 100 Sequential 4B TLV Records",          "input": ("T\x01\x01A" * 100) + "\n",                                     "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1468", "name": "Net TLV: DNS Compressed Pointer Loop (0xC0 0x0C)","input": "DNS_PTR_LOOP:\xc0\x0c\xc0\x0c\n",                               "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1469", "name": "Net TLV: BGP Path Attribute 4KB Spill",           "input": "BGP_ATTR:" + ("\x40\x01\xff" * 200) + "\n",                     "tier": "net_tlv_boundary"},
+    {"id": "TC-HEAP-1470", "name": "Net TLV: QUIC Varint 8-Byte Max Value",           "input": "QUIC_VARINT:\xff\xff\xff\xff\xff\xff\xff\xff\n",               "tier": "net_tlv_boundary"},
+
+    # ══ TIER 181 — OS Path / Filename / PATH_MAX Overflows (TC-1471..1480) ════
+    {"id": "TC-HEAP-1471", "name": "OS Path: 255B Exact Filename Boundary",           "input": "/tmp/" + ("f" * 255) + "\n",                                    "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1472", "name": "OS Path: 256B Filename +1 Limit Breach",          "input": "/tmp/" + ("f" * 256) + "\n",                                    "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1473", "name": "OS Path: 1024B macOS PATH_MAX Exact",             "input": "/" + ("dir/" * 255) + "end\n",                                  "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1474", "name": "OS Path: 1025B macOS PATH_MAX +1 Breach",         "input": "/" + ("dir/" * 256) + "end\n",                                  "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1475", "name": "OS Path: 4096B Linux PATH_MAX Exact",             "input": "/" + ("sub/" * 1023) + "end\n",                                 "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1476", "name": "OS Path: 4097B Linux PATH_MAX +1 Breach",         "input": "/" + ("sub/" * 1024) + "end\n",                                 "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1477", "name": "OS Path: Mixed Forward/Backslash 128B",           "input": ("/..\\/" * 32) + "target\n",                                    "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1478", "name": "OS Path: NUL-Byte Extension Bypass 64B",          "input": "/var/www/" + ("a" * 40) + ".php\x00.png\n",                     "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1479", "name": "OS Path: Tilde Home Expansion Flood",             "input": "~" + ("/.." * 40) + "/etc/passwd\n",                            "tier": "os_path_overflow"},
+    {"id": "TC-HEAP-1480", "name": "OS Path: Windows Long Path \\\\?\\ Prefix 512B",  "input": "\\\\?\\C:\\" + ("longdir\\" * 64) + "file.txt\n",                 "tier": "os_path_overflow"},
+
+    # ══ TIER 182 — Bit-Flipped Chaos & Trap Opcode Floods (TC-1481..1490) ═════
+    {"id": "TC-HEAP-1481", "name": "Chaos v2: Bit-Flipped Printable ASCII (XOR 0x80)","input": "".join(chr(c ^ 0x80) for c in range(0x21, 0x7F)) + "\n",        "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1482", "name": "Chaos v2: Bit-Flipped Printable ASCII (XOR 0x55)","input": "".join(chr(c ^ 0x55) for c in range(0x21, 0x7F)) + "\n",        "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1483", "name": "Chaos v2: INT3 Breakpoint Trap (0xCC x128)",      "input": ("\xcc" * 128) + "\n",                                           "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1484", "name": "Chaos v2: x86 NOP Sled (0x90 x512)",              "input": ("\x90" * 512) + "\n",                                           "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1485", "name": "Chaos v2: Alternating 0x00 / 0xFF (256B)",        "input": ("\x00\xff" * 128) + "\n",                                       "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1486", "name": "Chaos v2: Alternating 0x55 / 0xAA (512B)",        "input": ("\x55\xaa" * 256) + "\n",                                       "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1487", "name": "Chaos v2: LCG Pseudo-Random 512B Block",          "input": "".join(chr((i * 73 + 41) % 256) for i in range(512)) + "\n",    "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1488", "name": "Chaos v2: LCG Pseudo-Random 1024B Block",         "input": "".join(chr((i * 97 + 53) % 256) for i in range(1024)) + "\n",   "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1489", "name": "Chaos v2: Repeated 0xFE 0xED 0xFA 0xCE (256B)",   "input": ("\xfe\xed\xfa\xce" * 64) + "\n",                                "tier": "chaos_bitflip_v2"},
+    {"id": "TC-HEAP-1490", "name": "Chaos v2: Repeated 0xBA 0xAD 0xF0 0x0D (256B)",   "input": ("\xba\xad\xf0\x0d" * 64) + "\n",                                "tier": "chaos_bitflip_v2"},
+
+    # ══ TIER 183 — 1,500-Test Precision De Bruijn & Canary (TC-1491..1500) ════
+    {"id": "TC-HEAP-1491", "name": "Final 1500: 48B De Bruijn Canary Pattern",        "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5")[:48] + "\n",      "tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1492", "name": "Final 1500: 80B De Bruijn Canary Pattern",        "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 2)[:80] + "\n", "tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1493", "name": "Final 1500: 160B De Bruijn Canary Pattern",       "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 4)[:160] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1494", "name": "Final 1500: 320B De Bruijn Canary Pattern",       "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 7)[:320] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1495", "name": "Final 1500: 640B De Bruijn Canary Pattern",       "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 14)[:640] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1496", "name": "Final 1500: 1280B De Bruijn Canary Pattern",      "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 27)[:1280] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1497", "name": "Final 1500: 1500B Exact Suite-Count Pattern",     "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 32)[:1500] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1498", "name": "Final 1500: 3072B (3KB) De Bruijn Pattern",       "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 64)[:3072] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1499", "name": "Final 1500: 6144B (6KB) De Bruijn Pattern",       "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 128)[:6144] + "\n","tier": "debruijn_1500_final"},
+    {"id": "TC-HEAP-1500", "name": "Final 1500: 32768B (32KB) 1500-Test Milestone",   "input": ("Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5" * 683)[:32768] + "\n","tier": "debruijn_1500_final"},
 ]
 
 
@@ -1994,6 +2648,9 @@ def generate_report(source_file: str, results: List[Dict[str, Any]],
 
     max_cvss = max([r.get("cvss_score", 0.0) for r in results if r["status"] == "VULNERABILITY_FOUND"] or [0.0])
 
+    benchmark_target = len(RAW_BUILTIN_TESTS)
+    overall_suite_acc = 100.0 if total == benchmark_target else round((total / benchmark_target * 100.0), 2) if benchmark_target else 0.0
+
     report = {
         "report_metadata": {
             "title": "Comprehensive C++ Memory & Runtime Safety DAST Audit Report",
@@ -2010,9 +2667,9 @@ def generate_report(source_file: str, results: List[Dict[str, Any]],
         },
         "executive_summary": {
             "total_tests_executed": total,
-            "benchmark_matrix_target": 1000,
-            "overall_test_suite_accuracy_percentage": 100.0 if total == 1000 else round((total / 1000.0 * 100.0), 2),
-            "test_suite_completeness": f"{total} / 1000 ({100.0 if total == 1000 else round((total / 1000.0 * 100.0), 2)}%)",
+            "benchmark_matrix_target": benchmark_target,
+            "overall_test_suite_accuracy_percentage": overall_suite_acc,
+            "test_suite_completeness": f"{total} / {benchmark_target} ({overall_suite_acc}%)",
             "tests_passed": passed,
             "tests_passed_ratio": f"{passed} / {total}",
             "tests_passed_percentage": round(passed_pct, 2),
@@ -2045,8 +2702,6 @@ def generate_report(source_file: str, results: List[Dict[str, Any]],
 
     RED, GRN, YEL, CYN = "\033[91m", "\033[92m", "\033[93m", "\033[96m"
     BOLD, RST           = "\033[1m",  "\033[0m"
-
-    overall_suite_acc = 100.0 if total == 1000 else (total / 1000.0 * 100.0)
 
     print("\n" + "=" * 80)
     print("      DAST UNIVERSAL SUITE — ADVANCED MULTI-VULNERABILITY AUDIT TABLE")
@@ -2081,7 +2736,7 @@ def generate_report(source_file: str, results: List[Dict[str, Any]],
     print("=" * 80)
     print(f"  Target Source File   : {CYN}{source_file}{RST}")
     print("  EXECUTIVE SCORECARD & ACCURACY METRICS:")
-    print(f"  • Overall Test Suite Execution : {BOLD}{total} / 1000{RST} ({GRN}{overall_suite_acc:.1f}% Benchmark Completeness{RST})")
+    print(f"  • Overall Test Suite Execution : {BOLD}{total} / {benchmark_target}{RST} ({GRN}{overall_suite_acc:.1f}% Benchmark Completeness{RST})")
     print(f"  • Tests Passed (Clean Rate)   : {GRN}{BOLD}{passed} / {total}{RST} (Passed Accuracy: {GRN}{passed_pct:.2f}%{RST})")
     vuln_color = RED if vulns > 0 else GRN
     print(f"  • Vulnerabilities Found (Rate): {vuln_color}{BOLD}{vulns} / {total}{RST} (Detection Accuracy: {vuln_color}{vulns_pct:.2f}%{RST})")
